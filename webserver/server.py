@@ -45,15 +45,18 @@ conn = engine.connect()
 
 # The string needs to be wrapped around text()
 
-conn.execute(text("""CREATE TABLE IF NOT EXISTS test (
-  id serial,
-  name text
-);"""))
-conn.execute(text("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');"""))
+# conn.execute(text("""CREATE TABLE IF NOT EXISTS test (
+#   id serial,
+#   name text
+# );"""))
+# conn.execute(text("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');"""))
+
+
+# conn.execute(text("""SELECT * FROM "Users"; """))
 
 # To make the queries run, we need to add this commit line
 
-conn.commit() 
+# conn.commit() 
 
 @app.before_request
 def before_request():
@@ -116,7 +119,7 @@ def index():
   #
   # example of a database query 
   #
-  cursor = g.conn.execute(text("SELECT name FROM test"))
+  cursor = g.conn.execute(text("""SELECT * FROM "Sports"; """))
   g.conn.commit()
 
   # 2 ways to get results
@@ -132,7 +135,7 @@ def index():
   # for result in results:
   #   names.append(result["name"])
 
-  cursor.close()
+  # cursor.close()
 
   #
   # Flask uses Jinja templates, which is an extension to HTML where you can
@@ -182,14 +185,47 @@ def another():
   return render_template("another.html")
 
 
-# Example of adding new data to the database
-@app.route('/add', methods=['POST'])
-def add(): 
-  name = request.form['name']
-  params_dict = {"name":name}
-  g.conn.execute(text('INSERT INTO test(name) VALUES (:name)'), params_dict)
-  g.conn.commit()
-  return redirect('/')
+# # Example of adding new data to the database
+# @app.route('/add', methods=['POST'])
+# def add(): 
+#   name = request.form['name']
+#   params_dict = {"name":name}
+#   g.conn.execute(text('INSERT INTO Users(username, coordinate, name, age) VALUES (:name, :)'), params_dict)
+#   g.conn.commit()
+#   return redirect('/')
+
+
+
+# Route to handle form submission and add the user to the database
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    # Get form data
+    username = request.form['username']
+    coordinate = request.form['coordinate']
+    name = request.form['name']
+    age = request.form['age']
+    
+    # Insert into Users table
+    insert_query = text("""
+        INSERT INTO Users (username, coordinate, name, age)
+        VALUES (:username, :coordinate, :name, :age)
+    """)
+    
+    try:
+        with engine.connect() as conn:
+            conn.execute(insert_query, {
+                'username': username,
+                'coordinate': coordinate,
+                'name': name,
+                'age': age
+            })
+            conn.commit()  # Commit the transaction
+        flash("User added successfully!", "success")
+    except Exception as e:
+        flash(f"Error adding user: {e}", "error")
+    
+    return redirect(url_for('add_user_form'))
+
 
 
 @app.route('/login')
