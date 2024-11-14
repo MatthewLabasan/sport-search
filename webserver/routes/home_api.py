@@ -15,7 +15,7 @@ def home():
     """))
 
     user = g.conn.execute(text("""
-        SELECT username
+        SELECT username, name
         FROM "Users"
         WHERE username = :username
     """), {"username": username})
@@ -24,7 +24,7 @@ def home():
     user = user.fetchone()
 
     context = { 'trails': trail_names,
-                'name': username }
+                'name': user.name }
     
     for trail_name in trail_names:
         print(trail_name)

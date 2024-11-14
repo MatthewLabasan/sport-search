@@ -46,7 +46,6 @@ Find Sport - SportSearch
                 <input type="submit" value="Find Sport">
             </form>
 
-
             {% if sports %}
                 <h2>Search Results:</h2>
                 <ul>
@@ -57,12 +56,15 @@ Find Sport - SportSearch
                         <strong>Difficulty:</strong> {{ sport.difficulty }}<br>
                         <strong>Rating:</strong> {{ sport.rating }}<br>
                         <strong>Price:</strong> {{ sport.price }}<br>
-                    
-                        <form action="/save_sport" method="POST">
-                            <input type="hidden" name="sport_id" value="{{ sport.sport_id }}">
-                            <button type="button" onclick="saveSport(this)">Save</button>
-                        </form>
-                </li>
+                        {% if sport['completed'] %}
+                            <p style="color: green;">Completed</p>
+                        {% else %}
+                            <form action="/save_sport" method="POST" style="display:inline;">
+                                <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
+                                <button type="button" onclick="saveSport(this)">Save</button>
+                            </form>
+                        {% endif %}
+                    </li>
                     <hr>
                 {% endfor %}
                 </ul>

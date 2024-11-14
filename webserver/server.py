@@ -307,6 +307,11 @@ def add_review():
 
 @app.route('/find_sport', methods=['GET', 'POST'])
 def find_sport():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+    
     sport_types = ["skiing", "hiking", "biking", "kayaking", "scuba diving"]
     difficulties = ["beginner", "intermediate", "advanced"]
     sports = []
@@ -316,7 +321,11 @@ def find_sport():
         rating = request.form.get('rating', type=float)
         difficulty = request.form.get('difficulty')
 
-        query = """SELECT * FROM "Sports" WHERE sport_type = :sport_type"""
+        query =text("""
+            SELECT s.sport_id, s.sport_type, s.trail_name, s.difficulty, s.rating 
+            FROM "Sports" s
+            WHERE s.sport_type = :sport_type
+        """)
         params = {'sport_type': sport_type}
 
         if trail_name:
@@ -331,8 +340,21 @@ def find_sport():
 
         try:
             with engine.connect() as conn:
-                result = conn.execute(text(query), params)
+                result = conn.execute(query, params)
                 sports = [dict(row) for row in result.mappings()]
+
+                # Check which sports have been completed by the user
+                for sport in sports:
+                    status_query = text("""
+                        SELECT status FROM "Status"
+                        WHERE username = :username AND sport_id = :sport_id AND status = 'completed'
+                    """)
+                    status_result = conn.execute(status_query, {'username': username, 'sport_id': sport['sport_id']}).fetchone()
+                    if status_result:
+                        sport['completed'] = True  # Mark the sport as completed
+                    else:
+                        sport['completed'] = False  # Mark the sport as not completed
+
         except SQLAlchemyError as e:
             flash(f"Error finding sports: {e}", "error")
             return redirect(url_for('find_sport'))
