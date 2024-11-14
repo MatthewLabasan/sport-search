@@ -1,31 +1,23 @@
-<html>
-  <style>
-    body{ 
-      font-size: 15pt;
-      font-family: arial;
-    }
-  </style>
+{% extends 'base.html' %}
 
+{% block head %}
+{% endblock %}
 
-<body>
-  <h1>Welcome, {{name}}</h1>
-  <p><a href="/">Logout</a></p>
-  <div>{{data}}</div>
+{% block title %}
+Home - Sport Search
+{% endblock %}
 
-  <h2>Trails around you...</h2>
+{% block content %}
+  <body>
+    <h2>Welcome, {{name}}!</h2>
+    <div>{{data}}</div>
+    
+    <h3>All Available Trails</h3>
 
-  <div>
-    {% for trail in trails %}
-    <h4>{{trail[0]}}</h4>
-    {% endfor %}
-  </div>
-
-  <div class="button-container">
-    <button onclick="location.href='/find_sport'">Find Sports</button>
-    <button onclick="location.href='/completed'">Completed</button>
-    <button onclick="location.href='/saved'">Saved</button>
-  </div>
-</body>
-
-
-</html>
+    <div>
+      {% for trail in trails %}
+      <h4>{{trail[0]}}</h4>
+      {% endfor %}
+    </div>
+  </body>
+{% endblock %}

@@ -1,0 +1,21 @@
+body {
+    font-size: 15pt;
+    font-family: Arial, sans-serif;
+}
+
+.completed-sport {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+
+.saved-sport {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+}
+.complete-button {
+    font-size: 15pt;
+    padding: 10px;
+    margin-top: 10px;
+}
