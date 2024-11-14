@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completed Sports</title>
+    <style>
+        body {
+            font-size: 15pt;
+            font-family: Arial, sans-serif;
+        }
+        .completed-sport {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Completed Sports</h1>
+    <p><a href="/">Logout</a></p>
+    <p><a href="/home">Back to Homepage</a></p>
+
+    {% if not session['username'] %}
+        <p>You must be logged in to view completed sports. <a href="/login">Login here</a></p>
+    {% else %}
+        <h2>Your Completed Sports</h2>
+        {% if completed_sports %}
+            <ul>
+                {% for sport in completed_sports %}
+                    <li class="completed-sport">
+                        <strong>{{ sport['sport_type'] }} - {{ sport['trail_name'] }}</strong><br>
+                        Rating: {{ sport['rating'] }}<br>
+                        Difficulty: {{ sport['difficulty'] }}<br>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You have no completed sports.</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>

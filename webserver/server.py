@@ -122,19 +122,18 @@ def index():
   # DEBUG: this is debugging code to see what request looks like
   print(request.args)
 
-
   #
   # example of a database query 
   #
-  cursor = g.conn.execute(text("""SELECT * FROM "Sports"; """))
-  g.conn.commit()
+  # cursor = g.conn.execute(text("""SELECT * FROM "Sports"; """))
+  # g.conn.commit()
 
   # 2 ways to get results
 
   # Method 1 - Indexing result by column number
-  names = []
-  for result in cursor:
-    names.append(result[0])  
+  # names = []
+  # for result in cursor:
+  #   names.append(result[0])  
 
   # Method 2 - Indexing result by column name
   # names = []
@@ -170,14 +169,14 @@ def index():
   #     <div>{{n}}</div>
   #     {% endfor %}
   #
-  context = dict(data = names)
+  # context = dict(data = names)
 
 
   #
   # render_template looks in the templates/ folder for files.
   # for example, the below file reads template/index.html
   #
-  return render_template("index.html", **context)
+  return render_template("index.html")
 
 #
 # This is an example of a different path.  You can see it at:
@@ -187,20 +186,6 @@ def index():
 # Notice that the function name is another() rather than index()
 # The functions for each app.route need to have different names
 #
-@app.route('/another')
-def another():
-  return render_template("another.html")
-
-
-# # Example of adding new data to the database
-# @app.route('/add', methods=['POST'])
-# def add(): 
-#   name = request.form['name']
-#   params_dict = {"name":name}
-#   g.conn.execute(text('INSERT INTO Users(username, coordinate, name, age) VALUES (:name, :)'), params_dict)
-#   g.conn.commit()
-#   return redirect('/')
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -213,7 +198,7 @@ def register():
         
         # Insert into Users table
         insert_query = text("""
-            INSERT INTO Users (username, coordinate, name, age)
+            INSERT INTO "Users" (username, coordinate, name, age)
             VALUES (:username, :coordinate, :name, :age)
         """)
         
@@ -274,7 +259,7 @@ def add_review():
                 flash("User not logged in.", "error")
                 return redirect(url_for('login'))
 
-            sport_query = text("SELECT sport_id FROM Sports WHERE sport_type = :sport_type AND trail_name = :trail_name")
+            sport_query = text("""SELECT sport_id FROM "Sports" WHERE sport_type = :sport_type AND trail_name = :trail_name""")
             with engine.connect() as conn:
                 sport_result = conn.execute(sport_query, {'sport_type': sport_type, 'trail_name': trail_name}).fetchone()
             if not sport_result:
@@ -285,7 +270,7 @@ def add_review():
             time_written = datetime.now().date()
 
             insert_query = text("""
-                INSERT INTO Review (username, sport_id, time_written, date_completed, rating, comments, like_count)
+                INSERT INTO "Review" (username, sport_id, time_written, date_completed, rating, comments, like_count)
                 VALUES (:username, :sport_id, :time_written, :date_completed, :rating, :comments, :like_count)
             """)
             with engine.connect() as conn:
@@ -306,16 +291,18 @@ def add_review():
     return render_template("add_review.html")
 
 
-
-@app.route('/find_sport', methods=['GET'])
+@app.route('/find_sport', methods=['GET', 'POST'])
 def find_sport():
+    sport_types = ["skiing", "hiking", "biking", "kayaking", "scuba diving"]
+    difficulties = ["beginner", "intermediate", "advanced"]
+    sports = []
     if request.method == 'POST':
         sport_type = request.form.get('sport_type')
         trail_name = request.form.get('trail_name')
         rating = request.form.get('rating', type=float)
         difficulty = request.form.get('difficulty')
 
-        query = "SELECT * FROM Sports WHERE sport_type = :sport_type"
+        query = """SELECT * FROM "Sports" WHERE sport_type = :sport_type"""
         params = {'sport_type': sport_type}
 
         if trail_name:
@@ -331,13 +318,192 @@ def find_sport():
         try:
             with engine.connect() as conn:
                 result = conn.execute(text(query), params)
-                sports = [dict(row) for row in result]
-            return render_template("find_sport.html", sports=sports)
+                sports = [dict(row) for row in result.mappings()]
         except SQLAlchemyError as e:
             flash(f"Error finding sports: {e}", "error")
             return redirect(url_for('find_sport'))
-    return render_template("find_sport.html")
+    return render_template("find_sport.html", sports=sports, sport_types=sport_types, difficulties=difficulties)
 
+
+@app.route('/like_sport', methods=['POST'])
+def like_sport():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+    
+    sport_id = request.form.get('sport_id')
+    if not sport_id:
+        flash("Sport ID not provided.", "error")
+        return redirect(url_for('find_sport'))
+    
+    like_query = text("""
+        INSERT INTO "Likes" (username, sport_id, date_liked)
+        VALUES (:username, :sport_id, :date_liked)
+    """)
+    try:
+        with engine.connect() as conn:
+            conn.execute(like_query, {
+                'username': username,
+                'sport_id': sport_id,
+                'date_liked': datetime.now().date()
+            })
+            conn.commit()
+        flash("Sport liked successfully!", "success")
+    except Exception as e:
+        flash(f"Error liking sport: {e}", "error")
+    return redirect(url_for('find_sport'))
+
+
+@app.route('/completed', methods=['GET'])
+def completed():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+    
+    query = text("""
+        SELECT s.sport_id, s.sport_type, s.trail_name, s.difficulty, s.rating
+        FROM "Sports" s
+        JOIN "Status" st ON s.sport_id = st.sport_id
+        WHERE st.username = :username AND st.status = 'completed'
+    """)
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(query, {'username': username})
+            completed_sports = [dict(row) for row in result.mappings()]
+            # Debugging
+            print(f"Completed Sports for {username}: {completed_sports}")
+    except Exception as e:
+        flash(f"Error fetching completed sports: {e}", "error")
+        completed_sports = []
+    
+    return render_template("completed.html", completed_sports=completed_sports)
+
+@app.route('/saved', methods=['GET'])
+def saved():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+    
+    query = text("""
+        SELECT s.sport_id, s.sport_type, s.trail_name, s.difficulty, s.rating 
+        FROM "Sports" s
+        JOIN "Status" st ON s.sport_id = st.sport_id
+        WHERE st.username = :username AND st.status = 'saved'
+    """)
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(query, {'username': username})
+            saved_sports = [dict(row) for row in result.mappings()]
+            # Debugging
+            print(f"Saved Sports for {username}: {saved_sports}")
+    except Exception as e:
+        flash(f"Error fetching saved sports: {e}", "error")
+        saved_sports = []
+    
+    return render_template("saved.html", saved_sports=saved_sports)
+
+
+@app.route('/save_sport', methods=['POST'])
+def save_sport():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+    
+    sport_id = request.form.get('sport_id')
+    if not sport_id:
+        flash("Sport ID not provided.", "error")
+        return redirect(url_for('find_sport'))
+    
+    # Check if the sport is already saved by the user
+    check_query = text("""
+        SELECT * FROM "Status" 
+        WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
+    """)
+    try:
+        with engine.connect() as conn:
+            existing_entry = conn.execute(check_query, {
+                'username': username,
+                'sport_id': sport_id
+            }).fetchone()
+            if existing_entry:
+                # flash("You already saved this sport.", "error")
+                # return redirect(url_for('find_sport'))
+                return jsonify({'message': "You already saved this sport."}), 200
+            else:
+                # Insert the saved sport into the Status table
+                insert_query = text("""
+                    INSERT INTO "Status" (username, sport_id, status)
+                    VALUES (:username, :sport_id, 'saved')
+                """)
+                conn.execute(insert_query, {
+                    'username': username,
+                    'sport_id': sport_id
+                })
+                conn.commit()
+                return jsonify({'message': "Sport saved successfully!"}), 200
+                # flash("Sport saved successfully!", "success")
+    except Exception as e:
+        # flash(f"Error saving sport: {e}", "error")
+        return jsonify({'message': f"Error saving sport: {str(e)}"}), 500
+    
+    return redirect(url_for('find_sport'))
+
+
+@app.route('/complete_sport', methods=['POST'])
+def complete_sport():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+
+    sport_id = request.form.get('sport_id')
+    if not sport_id:
+        flash("Sport ID not provided.", "error")
+        return redirect(url_for('saved'))
+
+    # Check if the sport is saved by the user
+    check_query = text("""
+        SELECT * FROM "Status" 
+        WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
+    """)
+    try:
+        with engine.connect() as conn:
+            existing_entry = conn.execute(check_query, {'username': username, 'sport_id': sport_id}).fetchone()
+            # Debugging: Print if the sport is already saved or not
+            if existing_entry:
+                print("Sport is currently saved, proceeding to update the status to completed.")
+            else:
+                print("Sport is not saved or already completed.")
+
+            
+            if not existing_entry:
+                flash("Sport is not saved or already marked as completed.", "error")
+                return redirect(url_for('saved'))
+
+            # Update the status to 'completed'
+            update_query = text("""
+                UPDATE "Status"
+                SET status = 'completed'
+                WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
+            """)
+            result = conn.execute(update_query, {'username': username, 'sport_id': sport_id})
+            conn.commit()
+            
+            if result.rowcount == 0:
+                print("Update failed. No rows were affected.")
+                flash("Sport could not be marked as completed. Please try again.", "error")
+            else:
+                print("Update succeeded. Sport marked as completed.")
+                flash("Sport marked as completed successfully!", "success")
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        flash(f"Error marking sport as completed: {e}", "error")
+    
+    return redirect(url_for('saved'))
 
 
 # @app.route('/login')

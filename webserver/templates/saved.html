@@ -1,0 +1,47 @@
+<html>
+  <style>
+    body {
+        font-size: 15pt;
+        font-family: Arial, sans-serif;
+    }
+    .saved-sport {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+    }
+    button {
+        font-size: 15pt;
+        padding: 10px;
+        margin-top: 10px;
+    }
+</style>
+
+<body>
+    <h1>Saved Sports</h1>
+    <p><a href="/">Logout</a></p>
+    <p><a href="/home">Back to Homepage</a></p>
+
+    {% if not session['username'] %}
+        <p>You must be logged in to view saved sports. <a href="/login">Login here</a></p>
+    {% else %}
+        <h2>Your Saved Sports</h2>
+        {% if saved_sports %}
+            <ul>
+                {% for sport in saved_sports %}
+                    <li class="saved-sport">
+                        <strong>{{ sport['sport_type'] }} - {{ sport['trail_name'] }}</strong><br>
+                        Rating: {{ sport['rating'] }}<br>
+                        Difficulty: {{ sport['difficulty'] }}<br>
+                        <form action="/complete_sport" method="POST" style="display:inline;">
+                            <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
+                            <button type="submit">Mark as Completed</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You have no saved sports.</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
