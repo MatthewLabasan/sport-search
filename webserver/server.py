@@ -283,9 +283,11 @@ def add_review():
                     'like_count': 0
                 })
                 conn.commit()
+                print("added")
             flash("Review added successfully!", "success")
         except Exception as e:
             flash(f"Error adding review: {e}", "error")
+            print("error")
         return redirect(url_for('completed'))
     
     elif request.method == 'GET':

@@ -1,29 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Write a Review</title>
-</head>
-<body>
-    <h1>Write a Review for {{ sport_type }} - {{ trail_name }}</h1>
-    <p><a href="/completed">Back to Completed Sports</a></p>
+{% extends 'base.html' %}
 
-    <form action="/add_review" method="POST">
-        <input type="hidden" name="sport_id" value="{{ sport_id }}">
-        <input type="hidden" name="sport_type" value="{{ sport_type }}">
-        <input type="hidden" name="trail_name" value="{{ trail_name }}">
-        
-        <label for="date_completed">Date Completed:</label>
-        <input type="date" id="date_completed" name="date_completed" required><br>
+{% block title %}
+Write a Review
+{% endblock title %}
 
-        <label for="rating">Rating (1-5):</label>
-        <input type="number" id="rating" name="rating" min="1" max="5" required><br>
+{% block content %}
+    <body>
+        <button onclick="location.href='/completed'">Back to Completed Trails</button>
+        <br>
+        <h2>Write a Review for "{{ sport_type }} - {{ trail_name }}"</h2>
 
-        <label for="comments">Comments:</label><br>
-        <textarea id="comments" name="comments" rows="4" cols="50"></textarea><br>
+        <form action="/add_review" method="POST">
+            <input type="hidden" name="sport_id" value="{{ sport_id }}">
+            <input type="hidden" name="sport_type" value="{{ sport_type }}">
+            <input type="hidden" name="trail_name" value="{{ trail_name }}">
+            
+            <label for="date_completed">Date Completed:</label>
+            <input type="date" id="date_completed" name="date_completed" required><br>
 
-        <input type="submit" value="Submit Review">
-    </form>
-</body>
-</html>
+            <label for="rating">Rating (1-5):</label>
+            <input type="number" id="rating" name="rating" min="1" max="5" required><br>
+
+            <label for="comments">Comments:</label><br>
+            <textarea id="comments" name="comments" rows="4" cols="50"></textarea><br>
+
+            <input type="submit" value="Submit Review">
+        </form>
+    </body>
+{% endblock content %}

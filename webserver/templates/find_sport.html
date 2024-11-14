@@ -1,97 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Sport</title>
+{% extends 'base.html' %}
+
+{% block title %}
+Find Sport - SportSearch
+{% endblock %}
+
+{% block head %}
     <script>
         function showAlert(message) {
             alert(message);
         }
     </script>
-</head>
-<body>
-    <h1>Find Sport</h1>
-    <p><a href="/home">Back to Homepage</a></p>
+{% endblock %}
+
+{% block content %}
+    <body>
+        <h1>Find Sport</h1>
     
-    {% if not session['username'] %}
-        <p>You must be logged in to search for sports. <a href="/login">Login here</a></p>
-    {% else %}
-        <form action="/find_sport" method="POST">
-            <label for="sport_type">Sport Type:</label>
-            <select id="sport_type" name="sport_type" required>
-                <option value="skiing">Skiing</option>
-                <option value="hiking">Hiking</option>
-                <option value="biking">Biking</option>
-                <option value="kayaking">Kayaking</option>
-                <option value="scuba diving">Scuba Diving</option>
-            </select><br>
+        {% if not session['username'] %}
+            <p>You must be logged in to search for sports. <a href="/login">Login here</a></p>
+        {% else %}
+            <form action="/find_sport" method="POST">
+                <label for="sport_type">Sport Type:</label>
+                <select id="sport_type" name="sport_type" required>
+                    <option value="skiing">Skiing</option>
+                    <option value="hiking">Hiking</option>
+                    <option value="biking">Biking</option>
+                    <option value="kayaking">Kayaking</option>
+                    <option value="scuba diving">Scuba Diving</option>
+                </select><br>
 
-            <label for="trail_name">Trail Name (Optional):</label>
-            <input type="text" id="trail_name" name="trail_name"><br>
+                <label for="trail_name">Trail Name (Optional):</label>
+                <input type="text" id="trail_name" name="trail_name"><br>
 
-            <label for="rating">Minimum Rating (Optional):</label>
-            <input type="number" id="rating" name="rating" min="1" max="5"><br>
+                <label for="rating">Minimum Rating (Optional):</label>
+                <input type="number" id="rating" name="rating" min="1" max="5"><br>
 
-            <label for="difficulty">Difficulty (Optional):</label>
-            <select id="difficulty" name="difficulty">
-                <option value="">Select Difficulty</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-            </select><br>
+                <label for="difficulty">Difficulty (Optional):</label>
+                <select id="difficulty" name="difficulty">
+                    <option value="">Select Difficulty</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                </select><br>
 
-            <input type="submit" value="Find Sport">
-        </form>
+                <input type="submit" value="Find Sport">
+            </form>
 
 
-        {% if sports %}
-            <h2>Search Results:</h2>
-            <ul>
-            {% for sport in sports %}
-                <li>
-                    <strong>Sport Type:</strong> {{ sport.sport_type }}<br>
-                    <strong>Trail Name:</strong> {{ sport.trail_name }}<br>
-                    <strong>Difficulty:</strong> {{ sport.difficulty }}<br>
-                    <strong>Rating:</strong> {{ sport.rating }}<br>
-                    <strong>Price:</strong> {{ sport.price }}<br>
-                
-                    <form action="/save_sport" method="POST">
-                        <input type="hidden" name="sport_id" value="{{ sport.sport_id }}">
-                        <button type="button" onclick="saveSport(this)">Save</button>
-                    </form>
-            </li>
-                <hr>
-            {% endfor %}
-            </ul>
+            {% if sports %}
+                <h2>Search Results:</h2>
+                <ul>
+                {% for sport in sports %}
+                    <li>
+                        <strong>Sport Type:</strong> {{ sport.sport_type }}<br>
+                        <strong>Trail Name:</strong> {{ sport.trail_name }}<br>
+                        <strong>Difficulty:</strong> {{ sport.difficulty }}<br>
+                        <strong>Rating:</strong> {{ sport.rating }}<br>
+                        <strong>Price:</strong> {{ sport.price }}<br>
+                    
+                        <form action="/save_sport" method="POST">
+                            <input type="hidden" name="sport_id" value="{{ sport.sport_id }}">
+                            <button type="button" onclick="saveSport(this)">Save</button>
+                        </form>
+                </li>
+                    <hr>
+                {% endfor %}
+                </ul>
+            {% endif %}
         {% endif %}
-    {% endif %}
 
 
-    <script>
-        function saveSport(button) {
-            const form = button.closest('form');
-            fetch('/save_sport', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(new FormData(form))
-            })
-            .then(response => response.json())
-            .then(data => {
-                showAlert(data.message);
-                if (data.message === "Sport saved successfully!") {
-                    button.classList.add('saved');
-                    button.disabled = true;
-                    button.textContent = 'Saved';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('An error occurred while saving the sport.');
-            });
-        }
-    </script>
-</body>
-</html>
+        <script>
+            function saveSport(button) {
+                const form = button.closest('form');
+                fetch('/save_sport', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(new FormData(form))
+                })
+                .then(response => response.json())
+                .then(data => {
+                    showAlert(data.message);
+                    if (data.message === "Sport saved successfully!") {
+                        button.classList.add('saved');
+                        button.disabled = true;
+                        button.textContent = 'Saved';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while saving the sport.');
+                });
+            }
+        </script>
+    </body>
+{% endblock %}
