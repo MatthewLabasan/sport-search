@@ -1,12 +1,12 @@
-from flask import Blueprint, render_template, g
+from flask import Blueprint, render_template, g, session
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 
-home_api = Blueprint('api', __name__)
+home_api = Blueprint('home', __name__)
 
 @home_api.route('/')
 def home(): 
-    username = "alice01" # must be a tuple"
+    username = session.get('username', None)
 
     # we may want to only show sports in their local area for now
     trail_names = g.conn.execute(text("""
@@ -24,7 +24,7 @@ def home():
     user = user.fetchone()
 
     context = { 'trails': trail_names,
-                'name': user }
+                'name': username }
     
     for trail_name in trail_names:
         print(trail_name)

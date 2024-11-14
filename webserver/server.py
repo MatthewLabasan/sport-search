@@ -14,13 +14,16 @@ from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response, abort, session, flash, url_for, jsonify
 from datetime import datetime
 
-# routes
-from routes.home_api import home_api
-
 # templates
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 app.secret_key = '\xc0e\x1fe\xf4\x85\xb1\x84\xcfI\xc0t\xbf\xa4\x8ek-4\x1b\xfbz\t#d' 
+
+# routes
+from routes.home_api import home_api
+
+# blueprints
+app.register_blueprint(home_api, url_prefix='/home')
 
 #
 # The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
@@ -236,21 +239,20 @@ def login():
     if request.method == 'POST':
         # Get form data
         username = request.form['username']
-        
         # Check if user exists
-        query = text("SELECT * FROM Users WHERE username = :username")
+        query = text("""SELECT * FROM "Users" WHERE username = :username """)
         try:
             with engine.connect() as conn:
                 result = conn.execute(query, {'username': username}).fetchone()
             if result:
                 session['username'] = username
                 flash("Logged in successfully!", "success")
-                return redirect(url_for('recommend_sports'))
+                return redirect(url_for('home.home'))
             else:
                 flash("Invalid username.", "error")
         except Exception as e:
             flash(f"Error logging in: {e}", "error")
-        
+    
     return render_template("login.html")
 
 
@@ -310,7 +312,7 @@ def recommend_sports():
         return redirect(url_for('login'))
     
     # recommendation query based on user's preferences
-    query = text("SELECT * FROM Sports WHERE rating >= 3")  # Adjust the query as per your logic
+    query = text("SELECT * FROM Sports WHERE rating >= 3") 
     try:
         with engine.connect() as conn:
             result = conn.execute(query)
@@ -359,9 +361,6 @@ def find_sport():
 # def login():
 #     abort(401)
 #     this_is_never_executed()
-
-# homepage
-app.register_blueprint(home_api, url_prefix='/home')
 
 if __name__ == "__main__":
   import click
