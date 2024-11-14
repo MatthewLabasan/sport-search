@@ -32,6 +32,12 @@
                         <strong>{{ sport['sport_type'] }} - {{ sport['trail_name'] }}</strong><br>
                         Rating: {{ sport['rating'] }}<br>
                         Difficulty: {{ sport['difficulty'] }}<br>
+                        <form action="/add_review" method="GET" style="display:inline;">
+                            <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
+                            <input type="hidden" name="sport_type" value="{{ sport['sport_type'] }}">
+                            <input type="hidden" name="trail_name" value="{{ sport['trail_name'] }}">
+                            <button type="submit">Write a Review</button>
+                        </form>
                     </li>
                 {% endfor %}
             </ul>

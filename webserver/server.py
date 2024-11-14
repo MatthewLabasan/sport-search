@@ -241,11 +241,10 @@ def login():
     
     return render_template("login.html")
 
-
-
 @app.route('/add_review', methods=['GET', 'POST'])
 def add_review():
     if request.method == 'POST':
+        # Handle the form submission to add a review
         try:
             data = request.form
             sport_type = data['sport_type']
@@ -287,8 +286,21 @@ def add_review():
             flash("Review added successfully!", "success")
         except Exception as e:
             flash(f"Error adding review: {e}", "error")
-        return redirect(url_for('recommend_sports'))
-    return render_template("add_review.html")
+        return redirect(url_for('completed'))
+    
+    elif request.method == 'GET':
+        # Handle the GET request to show the add_review form
+        sport_id = request.args.get('sport_id')
+        sport_type = request.args.get('sport_type')
+        trail_name = request.args.get('trail_name')
+
+        if not sport_id or not sport_type or not trail_name:
+            flash("Sport details not provided.", "error")
+            return redirect(url_for('completed'))
+
+        # Render the add_review.html page with the sport details pre-filled
+        return render_template("add_review.html", sport_id=sport_id, sport_type=sport_type, trail_name=trail_name)
+
 
 
 @app.route('/find_sport', methods=['GET', 'POST'])
