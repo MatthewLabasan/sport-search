@@ -1,46 +1,14 @@
-<html>
-  <style>
-    body{ 
-      font-size: 15pt;
-      font-family: arial;
-    }
-  </style>
-
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+</head>
 <body>
-  <h1>Some famous Computer Scientists</h1>
-  <div>{{data}}</div>
-
-  <div>
-    {% for n in data %}
-    <div>{{n}}</div>
-    {% endfor %}
-  </div>
-
-<p><a href="another">Go to the other page</a></p>
-
-<form method="POST" action="/add">
-<p>Name of new computer scientist: <input type="text" name="name"> <input type="submit" value="Add"></p>
-</form>
-
-  <h2>Add New User</h2>
-  <form action="/add_user" method="POST">
-      <label for="username">Username:</label><br>
-      <input type="text" id="username" name="username" required><br><br>
-      
-      <label for="coordinate">Coordinate:</label><br>
-      <input type="text" id="coordinate" name="coordinate" required><br><br>
-      
-      <label for="name">Name:</label><br>
-      <input type="text" id="name" name="name" required><br><br>
-      
-      <label for="age">Age:</label><br>
-      <input type="number" id="age" name="age" required><br><br>
-      
-      <button type="submit">Add User</button>
-</form>
-
+    <h1>Welcome to the Sports Review Application</h1>
+    <p>Please choose an option:</p>
+    <a href="/login">Login</a><br>
+    <a href="/register">Register</a>
 </body>
-
-
 </html>
