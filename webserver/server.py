@@ -1,4 +1,3 @@
-
 """
 Columbia's COMS W4111.001 Introduction to Databases
 Example Webserver
@@ -9,11 +8,15 @@ A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
 import os
-  # accessible as a variable in index.html:
+# accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response, abort
 
+# routes
+from routes.home_api import home_api
+
+# templates
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
@@ -194,8 +197,6 @@ def another():
 #   g.conn.commit()
 #   return redirect('/')
 
-
-
 # Route to handle form submission and add the user to the database
 @app.route('/add_user', methods=['POST'])
 def add_user():
@@ -232,6 +233,10 @@ def add_user():
 def login():
     abort(401)
     this_is_never_executed()
+
+
+app.register_blueprint(home_api, url_prefix='/home')
+
 
 
 if __name__ == "__main__":
