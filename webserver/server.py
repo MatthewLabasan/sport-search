@@ -11,7 +11,8 @@ import os
 # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response, abort
+from flask import Flask, request, render_template, g, redirect, Response, abort, session, flash, url_for, jsonify
+from datetime import datetime
 
 # routes
 from routes.home_api import home_api
@@ -19,7 +20,7 @@ from routes.home_api import home_api
 # templates
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
-
+app.secret_key = '\xc0e\x1fe\xf4\x85\xb1\x84\xcfI\xc0t\xbf\xa4\x8ek-4\x1b\xfbz\t#d' 
 
 #
 # The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
@@ -226,8 +227,7 @@ def register():
         except Exception as e:
             flash(f"Error registering user: {e}", "error")
         
-        return redirect(url_for('register'))
-    
+        return redirect(url_for('login'))
     return render_template("register.html")
 
 
@@ -245,7 +245,7 @@ def login():
             if result:
                 session['username'] = username
                 flash("Logged in successfully!", "success")
-                return redirect(url_for('get_users'))
+                return redirect(url_for('recommend_sports'))
             else:
                 flash("Invalid username.", "error")
         except Exception as e:
@@ -255,56 +255,71 @@ def login():
 
 
 
-@app.route('/add_review', methods=['POST'])
+@app.route('/add_review', methods=['GET', 'POST'])
 def add_review():
-    try:
-        # Get form data
-        data = request.form
-        sport_type = data['sport_type']
-        trail_name = data['trail_name']
-        date_completed = data['date_completed']
-        rating = data['rating']
-        comments = data['comments']
+    if request.method == 'POST':
+        try:
+            data = request.form
+            sport_type = data['sport_type']
+            trail_name = data['trail_name']
+            date_completed = data['date_completed']
+            rating = data['rating']
+            comments = data['comments']
 
-        # Get logged-in user's username from session
-        username = session.get('username')
-        if not username:
-            flash("User not logged in.", "error")
-            return redirect(url_for('add_review'))
+            username = session.get('username')
+            if not username:
+                flash("User not logged in.", "error")
+                return redirect(url_for('login'))
 
-        # Get sport_id from sport_type and trail_name
-        sport_query = text("SELECT sport_id FROM Sports WHERE sport_type = :sport_type AND trail_name = :trail_name")
-        with engine.connect() as conn:
-            sport_result = conn.execute(sport_query, {'sport_type': sport_type, 'trail_name': trail_name}).fetchone()
-        if not sport_result:
-            flash("Sport not found.", "error")
-            return redirect(url_for('add_review'))
-        sport_id = sport_result['sport_id']
+            sport_query = text("SELECT sport_id FROM Sports WHERE sport_type = :sport_type AND trail_name = :trail_name")
+            with engine.connect() as conn:
+                sport_result = conn.execute(sport_query, {'sport_type': sport_type, 'trail_name': trail_name}).fetchone()
+            if not sport_result:
+                flash("Sport not found.", "error")
+                return redirect(url_for('add_review'))
+            sport_id = sport_result['sport_id']
 
-        # Get current date as time_written
-        time_written = datetime.now().date()
+            time_written = datetime.now().date()
 
-        # Insert review into Review table
-        insert_query = text("""
-            INSERT INTO Review (username, sport_id, time_written, date_completed, rating, comments, like_count)
-            VALUES (:username, :sport_id, :time_written, :date_completed, :rating, :comments, :like_count)
-        """)
-        with engine.connect() as conn:
-            conn.execute(insert_query, {
-                'username': username,
-                'sport_id': sport_id,
-                'time_written': time_written,
-                'date_completed': date_completed,
-                'rating': rating,
-                'comments': comments,
-                'like_count': 0
-            })
-            conn.commit()
-        flash("Review added successfully!", "success")
-    except Exception as e:
-        flash(f"Error adding review: {e}", "error")
+            insert_query = text("""
+                INSERT INTO Review (username, sport_id, time_written, date_completed, rating, comments, like_count)
+                VALUES (:username, :sport_id, :time_written, :date_completed, :rating, :comments, :like_count)
+            """)
+            with engine.connect() as conn:
+                conn.execute(insert_query, {
+                    'username': username,
+                    'sport_id': sport_id,
+                    'time_written': time_written,
+                    'date_completed': date_completed,
+                    'rating': rating,
+                    'comments': comments,
+                    'like_count': 0
+                })
+                conn.commit()
+            flash("Review added successfully!", "success")
+        except Exception as e:
+            flash(f"Error adding review: {e}", "error")
+        return redirect(url_for('recommend_sports'))
+    return render_template("add_review.html")
+
+@app.route('/recommend_sports')
+def recommend_sports():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
     
-    return redirect(url_for('add_review'))
+    # recommendation query based on user's preferences
+    query = text("SELECT * FROM Sports WHERE rating >= 3")  # Adjust the query as per your logic
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(query)
+            recommended_sports = [dict(row) for row in result]
+    except Exception as e:
+        flash(f"Error fetching recommendations: {e}", "error")
+        recommended_sports = []
+    
+    return render_template("recommend_sports.html", recommended_sports=recommended_sports)
 
 
 @app.route('/find_sport', methods=['GET'])
