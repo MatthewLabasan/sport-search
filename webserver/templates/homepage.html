@@ -8,7 +8,7 @@
 
 
 <body>
-  <h1>Homepage</h1>
+  <h1>Welcome, {{name[0]}}</h1>
   <p><a href="/">Logout</a></p>
   <div>{{data}}</div>
 
@@ -16,7 +16,7 @@
 
   <div>
     {% for trail in trails %}
-    <h4>{{trail['trail_name']}}</h4>
+    <h4>{{trail[0]}}</h4>
     {% endfor %}
   </div>
 </body>
