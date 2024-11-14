@@ -226,11 +226,12 @@ def register():
                     'age': age
                 })
                 conn.commit()  # Commit the transaction
+            session['username'] = username
             flash("User registered successfully!", "success")
         except Exception as e:
             flash(f"Error registering user: {e}", "error")
         
-        return redirect(url_for('login'))
+        return redirect(url_for('home.home'))
     return render_template("register.html")
 
 
@@ -304,36 +305,16 @@ def add_review():
         return redirect(url_for('recommend_sports'))
     return render_template("add_review.html")
 
-@app.route('/recommend_sports')
-def recommend_sports():
-    username = session.get('username')
-    if not username:
-        flash("User not logged in.", "error")
-        return redirect(url_for('login'))
-    
-    # recommendation query based on user's preferences
-    query = text("SELECT * FROM Sports WHERE rating >= 3") 
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(query)
-            recommended_sports = [dict(row) for row in result]
-    except Exception as e:
-        flash(f"Error fetching recommendations: {e}", "error")
-        recommended_sports = []
-    
-    return render_template("recommend_sports.html", recommended_sports=recommended_sports)
 
 
 @app.route('/find_sport', methods=['GET'])
 def find_sport():
-    try:
-        # Get query parameters
-        sport_type = request.args.get('sport_type')
-        trail_name = request.args.get('trail_name')
-        rating = request.args.get('rating', type=float)
-        difficulty = request.args.get('difficulty')
+    if request.method == 'POST':
+        sport_type = request.form.get('sport_type')
+        trail_name = request.form.get('trail_name')
+        rating = request.form.get('rating', type=float)
+        difficulty = request.form.get('difficulty')
 
-        # Build query
         query = "SELECT * FROM Sports WHERE sport_type = :sport_type"
         params = {'sport_type': sport_type}
 
@@ -347,13 +328,15 @@ def find_sport():
             query += " AND difficulty = :difficulty"
             params['difficulty'] = difficulty
 
-        # Execute query
-        with engine.connect() as conn:
-            result = conn.execute(text(query), params)
-            sports = [dict(row) for row in result]
-        return jsonify(sports)
-    except SQLAlchemyError as e:
-        return jsonify({"error": str(e)}), 500
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text(query), params)
+                sports = [dict(row) for row in result]
+            return render_template("find_sport.html", sports=sports)
+        except SQLAlchemyError as e:
+            flash(f"Error finding sports: {e}", "error")
+            return redirect(url_for('find_sport'))
+    return render_template("find_sport.html")
 
 
 
