@@ -25,6 +25,10 @@ Saved Sports - SportSearch
                                 <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
                                 <button class="complete-button" type="submit">Mark as Completed</button>
                             </form>
+                            <form action="/unsave_sport" method="POST" style="display:inline;">
+                                <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
+                                <button type="submit">Unsave</button>
+                            </form>
                         </li>
                     {% endfor %}
                 </ul>
