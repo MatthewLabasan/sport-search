@@ -15,7 +15,7 @@ Completed Sports - SportSearch
                 <ul>
                     {% for sport in completed_sports %}
                         <li class="completed-sport">
-                            <strong>{{ sport['sport_type'] }} - {{ sport['trail_name'] }}</strong><br>
+                            <a href="{{ url_for('sport') }}?id={{ sport['sport_id'] }}"><strong>{{ sport['trail_name'] }} ({{ sport['sport_type'] }})</strong></a><br>
                             Rating: {{ sport['rating'] }}<br>
                             Difficulty: {{ sport['difficulty'] }}<br>
                             <form action="/add_review" method="GET" style="display:inline;">

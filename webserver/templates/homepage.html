@@ -12,11 +12,11 @@ Home - Sport Search
     <h2>Welcome, {{name}}!</h2>
     <div>{{data}}</div>
     
-    <h3>All Available Trails</h3>
+    <h3>Trails In Your Area</h3>
 
     <div>
-      {% for trail in trails %}
-      <h4>{{trail[0]}}</h4>
+      {% for sport in sports %}
+      <a href="{{ url_for('sport') }}?id={{ sport['sport_id'] }}">{{ sport.trail_name }}<br></a>
       {% endfor %}
     </div>
   </body>

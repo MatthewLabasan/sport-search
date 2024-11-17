@@ -261,18 +261,27 @@ def login():
         # Get form data
         username = request.form['username']
         # Check if user exists
-        query = text("""SELECT * FROM "Users" WHERE username = :username """)
+        user_query = text("""SELECT * FROM "Users" WHERE username = :username """)
+        # Get user's location
+        location_query = text(""" SELECT state
+                                  FROM "Users" U INNER JOIN "Location" L
+                                    ON U.coordinate = L.coordinate
+                                  WHERE U.username = :username
+                              """)
         try:
             with engine.connect() as conn:
-                result = conn.execute(query, {'username': username}).fetchone()
-            if result:
+                user = conn.execute(user_query, {'username': username}).fetchone()
+                location = conn.execute(location_query, {'username': username}).fetchone()
+            if user and location:
                 session['username'] = username
+                session['name'] = user.name # For homepage use
+                session['state'] = location.state # For homepage use
                 flash("Logged in successfully!", "success")
                 return redirect(url_for('home.home'))
             else:
                 flash("Invalid username.", "error")
         except Exception as e:
-            flash(f"Error logging in: {e}", "error")
+            print(f"Error logging in: {e}", "error")
     
     return render_template("login.html")
 
@@ -423,13 +432,109 @@ def find_sport():
             return redirect(url_for('find_sport'))
     return render_template("find_sport.html", sports=sports, sport_types=sport_types, difficulties=difficulties)
 
-@app.route('/sport', methods=['GET', 'PATCH'])
+@app.route('/sport', methods=['GET'])
 def sport():
-    # passed in sportid. now get all data again from that specific sport and show it for each sport by passing into template for rendering.
-    print('hello')
+    username = session.get("username")
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+
+    context = {}
+
+    # Get sport metadata
+    try:
+        sport_id = request.args.get('id')
+        sport_query = """ 
+                      SELECT * 
+                      FROM "Sports" S
+                      WHERE S.sport_id = :sport_id
+                      """
+        params = {'sport_id': sport_id}
+        sport = g.conn.execute(text(sport_query), params)
+        sport = [dict(row) for row in sport.mappings()][0]  # Put results into a dictionary for additional conditionals in jinja
+        context.update({'sport': sport})
+
+        # Mark as completed or not
+        check_completed_query = """ 
+                                SELECT S.status 
+                                FROM "Status" S
+                                WHERE username = :username AND sport_id = :sport_id AND S.status = 'completed'
+                                """
+        completed_result = conn.execute(text(check_completed_query), {'username': username, 'sport_id': sport['sport_id']}).fetchone()
+        if completed_result:
+            sport['completed'] = True  # Mark the sport as completed
+        else:
+            sport['completed'] = False  # Mark the sport as not completed
+
+        # Mark as saved or not
+        check_saved_query = """
+                            SELECT *
+                            FROM "Status"
+                            WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
+                            """
+        saved_result = conn.execute(text(check_saved_query), {'username': username, 'sport_id': sport['sport_id']}).fetchone()
+        if saved_result:
+            sport['saved'] = True  # Mark the sport as saved
+        else:
+            sport['saved'] = False 
+        
+    except SQLAlchemyError as e:
+        print(f"Error finding sports: {e}", "error") 
+        return redirect(url_for('find_sport'))
+    
+    # Get review data
+    try:
+        review_query = """ 
+                       SELECT *
+                       FROM "Review" R
+                       WHERE R.sport_id = :sport_id
+                       """
+        reviews = g.conn.execute(text(review_query), params)
+        reviews = reviews.fetchall()
+        context.update({'reviews': reviews})
+    except SQLAlchemyError as e:
+        flash(f"Error finding reviews: {e}", "error")
+        context.update({'review_error': "Unable to load reviews. Try again."}) # still show page, but with error
+
+    # Get equipment data
+    try:
+        equipment_query = """
+                          SELECT *
+                          FROM "Equipment" E
+                          WHERE E.equipment_name IN (
+                            SELECT N.equipment_name
+                            FROM "Needs" N
+                            WHERE sport_id = :sport_id)
+                          """
+        equipment = g.conn.execute(text(equipment_query), params)
+        equipment = equipment.fetchall()
+        context.update({'equipment': equipment})
+    except SQLAlchemyError as e:
+        flash(f"Error finding equipment: {e}", "error")
+        context.update({'equipment_error': "Unable to load equipment. Try again."})
+
+    # Get related sports data
+    try:
+        related_query = """
+                        SELECT * 
+                        FROM "Sports" S
+                        WHERE S.sport_type = :sport_type AND S.sport_id != :sport_id
+                        """
+        params.update({'sport_type': sport['sport_type']})
+        related_sports = g.conn.execute(text(related_query), params)
+        related_sports = related_sports.fetchall()
+        context.update({'related_sports': related_sports})
+    except SQLAlchemyError as e:
+        flash(f"Error finding related sports: {e}", "error")
+        context.update({'related_error': "Unable to load related sports. Try again."})
+    
+    return render_template("sport.html", **context)
+        
+
+# ADD NEW ROUTE TO ADD A NEW SPORT TO THE DATABASE IN THE "FIND SPORT" PAGE.
 
 
-
+# NEED TO CHANGE TO like REVIEW not Sport
 @app.route('/like_sport', methods=['POST'])
 def like_sport():
     username = session.get('username')

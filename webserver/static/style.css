@@ -1,6 +1,20 @@
 body {
     font-size: 15pt;
     font-family: Arial, sans-serif;
+    margin: 0 20px
+}
+
+button {
+    font-size: 15px;
+    border-radius: 8px;
+    border: 0px;
+    margin: 5px;
+    padding: 10px;
+}
+
+.complete-button {
+    font-size: 15px;
+    background-color: #b4f188;
 }
 
 .completed-sport {
@@ -14,8 +28,59 @@ body {
     border-bottom: 1px solid #ccc;
     padding-bottom: 10px;
 }
-.complete-button {
-    font-size: 15pt;
-    padding: 10px;
-    margin-top: 10px;
+
+.completed {
+    color: green;
+}
+
+.saved {
+    color: blue;
+}
+
+.saved-liked {
+    color: red;
+}
+
+.error {
+    color: red;
+}
+
+.review {
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #e9f0e5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+}
+
+.review-date {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.review-content {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.like-button {
+    text-decoration: none;
+    color: #ff4d4f;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #ffe5e6;
+    transition: background-color 0.2s;
+}
+
+.like-button:hover {
+    background-color: #ffb3b5;
+}
+
+.like-count {
+    font-weight: bold;
 }
