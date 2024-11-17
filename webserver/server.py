@@ -11,6 +11,7 @@ import os
 # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
+from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, request, render_template, g, redirect, Response, abort, session, flash, url_for, jsonify
 from datetime import datetime
 
@@ -337,6 +338,12 @@ def find_sport():
             flash(f"Error finding sports: {e}", "error")
             return redirect(url_for('find_sport'))
     return render_template("find_sport.html", sports=sports, sport_types=sport_types, difficulties=difficulties)
+
+@app.route('/sport', methods=['GET', 'PATCH'])
+def sport():
+    # passed in sportid. now get all data again from that specific sport and show it for each sport by passing into template for rendering.
+    print('hello')
+
 
 
 @app.route('/like_sport', methods=['POST'])
