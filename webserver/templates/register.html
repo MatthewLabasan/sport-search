@@ -7,12 +7,23 @@
 </head>
 <body>
     <h1>Register</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if category == 'username_error' %}
+            <p class="error">{{ message }}</p>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     <form action="/register" method="POST">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required><br>
 
-        <label for="coordinate">Location Coordinate:</label>
-        <input type="text" id="coordinate" name="coordinate" required><br>
+        <label for="city">City:</label>
+        <input type="text" id="city" name="city" required><br>
 
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required><br>

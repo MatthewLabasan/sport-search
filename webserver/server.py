@@ -13,6 +13,7 @@ from sqlalchemy import *
 from sqlalchemy.pool import NullPool
 from flask import Flask, request, render_template, g, redirect, Response, abort, session, flash, url_for, jsonify
 from datetime import datetime
+from geopy.geocoders import Nominatim
 
 # templates
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -192,10 +193,43 @@ def register():
     if request.method == 'POST':
         # Get form data
         username = request.form['username']
-        coordinate = request.form['coordinate']
+        # coordinate = request.form['coordinate']
+        city = request.form['city']
         name = request.form['name']
         age = request.form['age']
+
+
+        # Check if username already exists
+        check_query = text("""
+            SELECT * FROM "Users" WHERE username = :username
+        """)
+        try:
+            with engine.connect() as conn:
+                existing_user = conn.execute(check_query, {'username': username}).fetchone()
+                if existing_user:
+                    flash("Username already used, please try a different one.", "username_error")
+                    return redirect(url_for('register'))
+        except Exception as e:
+            flash(f"Error checking username: {e}", "error")
+            return redirect(url_for('register'))
+
         
+        # Convert city name to coordinates using Nominatim
+        geolocator = Nominatim(user_agent="your_app_name")
+        try:
+            location = geolocator.geocode(city)
+            if location:
+                coordinate = f"{location.latitude} {location.longitude}"
+                print(f'coordinate: {coordinate}')
+            else:
+                flash("City not found. Please enter a valid city name.", "error")
+                return redirect(url_for('register'))
+        except Exception as e:
+            flash(f"Error getting coordinates: {e}", "error")
+            return redirect(url_for('register'))
+
+
+
         # Insert into Users table
         insert_query = text("""
             INSERT INTO "Users" (username, coordinate, name, age)
