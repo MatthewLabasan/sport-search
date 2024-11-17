@@ -33,7 +33,7 @@ Find Sport - SportSearch
                 <input type="text" id="trail_name" name="trail_name"><br>
 
                 <label for="rating">Minimum Rating (Optional):</label>
-                <input type="number" id="rating" name="rating" min="1" max="5"><br>
+                <input type="number" id="rating" name="rating" min="1" max="5" step="0.1"><br>
 
                 <label for="difficulty">Difficulty (Optional):</label>
                 <select id="difficulty" name="difficulty">
@@ -46,7 +46,6 @@ Find Sport - SportSearch
                 <input type="submit" value="Find Sport">
             </form>
 
-
             {% if sports %}
                 <h2>Search Results:</h2>
                 <ul>
@@ -57,12 +56,18 @@ Find Sport - SportSearch
                         <strong>Difficulty:</strong> {{ sport.difficulty }}<br>
                         <strong>Rating:</strong> {{ sport.rating }}<br>
                         <strong>Price:</strong> {{ sport.price }}<br>
-                    
-                        <form action="/save_sport" method="POST">
-                            <input type="hidden" name="sport_id" value="{{ sport.sport_id }}">
-                            <button type="button" onclick="saveSport(this)">Save</button>
-                        </form>
-                </li>
+                        <strong>Number of people completed:</strong> {{ sport.num_people_completed }}<br>
+                        {% if sport['completed'] %}
+                            <p style="color: green;">Completed</p>
+                        {% elif sport['saved'] %}
+                            <p style="color: blue;">Saved</p>
+                        {% else %}
+                            <form action="/save_sport" method="POST" style="display:inline;">
+                                <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
+                                <button type="button" onclick="saveSport(this)">Save</button>
+                            </form>
+                        {% endif %}
+                    </li>
                     <hr>
                 {% endfor %}
                 </ul>
