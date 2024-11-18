@@ -6,8 +6,6 @@ Write a Review
 
 {% block content %}
     <body>
-        <button onclick="location.href='/completed'">Back to Completed Trails</button>
-        <br>
         <h2>Write a Review for "{{ trail_name }} ({{ sport_type }})"</h2>
 
         <form action="/add_review" method="POST">
@@ -24,7 +22,7 @@ Write a Review
             <label for="comments">Comments:</label><br>
             <textarea id="comments" name="comments" rows="4" cols="50"></textarea><br>
 
-            <input type="submit" value="Submit Review">
+            <input type="submit" value="Submit Review">  <span><button onclick="location.href='/completed'">Back to Completed Trails</button></span>
         </form>
     </body>
 {% endblock content %}

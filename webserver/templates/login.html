@@ -4,15 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <h1>Login</h1>
+    {% if login_error %}
+    <p style="color: red">Invalid username.</p>
+    {% endif %}
     <form action="/login" method="POST">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required><br>
 
         <input type="submit" value="Login">
     </form>
-    <a href="/register">Don't have an account? Register here</a>
+    <br>
+    <a href="/register" class="button-login">Don't have an account? Register here</a>
 </body>
 </html>

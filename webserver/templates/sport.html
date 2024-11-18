@@ -155,13 +155,13 @@
         {% endif %}
     </div>
 
-    <!--Related Sports-->
+    <!--Related Sports (same type)-->
     <div class="related">
         {% if related_error %}
             <p class="error">{{ related_error }}</p>
         {% else %}
              {% if related_sports %}
-                <h3>Related Trails</h3>
+                <h3>More '{{ sport['sport_type'] }}' Trails</h3>
                 {% for related_sport in related_sports %}
                     <a href="{{ url_for('sport') }}?id={{ related_sport['sport_id'] }}">{{ related_sport.trail_name }}</a><br>
                 {% endfor %}

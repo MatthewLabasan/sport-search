@@ -1,6 +1,6 @@
 """
 Columbia's COMS W4111.001 Introduction to Databases
-Example Webserver
+Sally Liu & Matthew Labasan Project 1: Sports Search
 To run locally:
     python3 server.py
 Go to http://localhost:8111 in your browser.
@@ -28,45 +28,10 @@ from routes.home_api import home_api
 # blueprints
 app.register_blueprint(home_api, url_prefix='/home')
 
-#
-# The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
-#
-# XXX: The URI should be in the format of:
-#
-#     postgresql://user:password@104.196.222.236/proj1part2
-#
-# For example, if you had username gravano and password foobar, then the following line would be:
-#
-#     DATABASEURI = "postgresql://gravano:foobar@104.196.222.236/proj1part2"
-#
 DATABASEURI = "postgresql://bl3092:938417@104.196.222.236/proj1part2"
-
-
-#
-# This line creates a database engine that knows how to connect to the URI above.
-#
 engine = create_engine(DATABASEURI)
-
-#
-# Example of running queries in your database
-# Note that this will probably not work if you already have a table named 'test' in your database, containing meaningful data. This is only an example showing you how to run queries in your database using SQLAlchemy.
-#
 conn = engine.connect()
 
-# The string needs to be wrapped around text()
-
-# conn.execute(text("""CREATE TABLE IF NOT EXISTS test (
-#   id serial,
-#   name text
-# );"""))
-# conn.execute(text("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');"""))
-
-
-# conn.execute(text("""SELECT * FROM "Users"; """))
-
-# To make the queries run, we need to add this commit line
-
-# conn.commit() 
 
 @app.before_request
 def before_request():
@@ -95,100 +60,14 @@ def teardown_request(exception):
   except Exception as e:
     pass
 
-
-#
-# @app.route is a decorator around index() that means:
-#   run index() whenever the user tries to access the "/" path using a GET request
-#
-# If you wanted the user to go to, for example, localhost:8111/foobar/ with POST or GET then you could use:
-#
-#       @app.route("/foobar/", methods=["POST", "GET"])
-#
-# PROTIP: (the trailing / in the path is important)
-#
-# see for routing: https://flask.palletsprojects.com/en/2.0.x/quickstart/?highlight=routing
-# see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
-#
 @app.route('/')
 def index():
-  """
-  request is a special object that Flask provides to access web request information:
-
-  request.method:   "GET" or "POST"
-  request.form:     if the browser submitted a form, this contains the data in the form
-  request.args:     dictionary of URL arguments, e.g., {a:1, b:2} for http://localhost?a=1&b=2
-
-  See its API: https://flask.palletsprojects.com/en/2.0.x/api/?highlight=incoming%20request%20data
-
-  """
-
   # DEBUG: this is debugging code to see what request looks like
   print(request.args)
 
-  #
-  # example of a database query 
-  #
-  # cursor = g.conn.execute(text("""SELECT * FROM "Sports"; """))
-  # g.conn.commit()
-
-  # 2 ways to get results
-
-  # Method 1 - Indexing result by column number
-  # names = []
-  # for result in cursor:
-  #   names.append(result[0])  
-
-  # Method 2 - Indexing result by column name
-  # names = []
-  # results = cursor.mappings().all()
-  # for result in results:
-  #   names.append(result["name"])
-
-  # cursor.close()
-
-  #
-  # Flask uses Jinja templates, which is an extension to HTML where you can
-  # pass data to a template and dynamically generate HTML based on the data
-  # (you can think of it as simple PHP)
-  # documentation: https://realpython.com/primer-on-jinja-templating/
-  #
-  # You can see an example template in templates/index.html
-  #
-  # context are the variables that are passed to the template.
-  # for example, "data" key in the context variable defined below will be
-  # accessible as a variable in index.html:
-  #
-  #     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
-  #     <div>{{data}}</div>
-  #
-  #     # creates a <div> tag for each element in data
-  #     # will print:
-  #     #
-  #     #   <div>grace hopper</div>
-  #     #   <div>alan turing</div>
-  #     #   <div>ada lovelace</div>
-  #     #
-  #     {% for n in data %}
-  #     <div>{{n}}</div>
-  #     {% endfor %}
-  #
-  # context = dict(data = names)
-
-
-  #
-  # render_template looks in the templates/ folder for files.
-  # for example, the below file reads template/index.html
-  #
+  # Ensure logout
+  session.clear()
   return render_template("index.html")
-
-#
-# This is an example of a different path.  You can see it at:
-#
-#     localhost:8111/another
-#
-# Notice that the function name is another() rather than index()
-# The functions for each app.route need to have different names
-#
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -202,8 +81,10 @@ def register():
 
         # Check if username already exists
         check_query = text("""
-            SELECT * FROM "Users" WHERE username = :username
-        """)
+                           SELECT * 
+                           FROM "Users" 
+                           WHERE username = :username
+                           """)
         try:
             with engine.connect() as conn:
                 existing_user = conn.execute(check_query, {'username': username}).fetchone()
@@ -219,7 +100,7 @@ def register():
         try:
             location = geolocator.geocode(city)
             if location:
-                coordinate = f"{location.latitude} {location.longitude}"
+                coordinate = f"{location.latitude}, {location.longitude}"
                 print(f'coordinate: {coordinate}')
             else:
                 flash("City not found. Please enter a valid city name.", "error")
@@ -227,7 +108,59 @@ def register():
         except Exception as e:
             flash(f"Error getting coordinates: {e}", "error")
             return redirect(url_for('register'))
+        
+        # Get coordinate data & add if not already in "Location" table
+        try:
+            coordinate_check_query = """
+                                    SELECT *
+                                    FROM "Location"
+                                    WHERE coordinate = :coordinate
+                                    """
+            result = g.conn.execute(text(coordinate_check_query), {'coordinate': coordinate}).fetchone()
+        except SQLAlchemyError as e:
+            flash(f"Error getting equipment cost: {e}", "error")
+            return jsonify({'message': "There was an error getting coordinates. Try again."}), 400
+        
+        # Add to "Location" table
+        if not result:
+            # Convert coordinates to City 
+            geolocator = Nominatim(user_agent="cs4111project")
+            try:
+                location = geolocator.reverse(coordinate, language="en")
+                if location:
+                    location = location.raw['address']
+                    city = location.get('city', location.get('county', location.get('region', None)))
+                    state = location.get('state', location.get('country', None))
+                    country = location.get('country', None)
 
+                    # Reformat to abbreviations if available
+                    state = us_state_abbreviations.get(state, state)
+                    country = country_acronyms.get(country, country)
+                if not location or not city or not state or not country:
+                    flash("Coordinates not found.", "error")
+                    return jsonify({'message': "Coordinates not found. Try again."}), 400
+            except Exception as e:
+                flash(f"Error getting coordinates: {e}", "error")
+                return jsonify({'message': f"There was an error adding the coordinates. Try again. {e}"}), 400
+            
+            print(f"{city}, {state}, {country}, {coordinate}")
+            
+            # Add to table
+            try:
+                location_query = """
+                                INSERT INTO "Location" (coordinate, country, state, city)
+                                VALUES (:coordinate, :country, :state, :city)
+                                """
+                paramaters = {'coordinate': coordinate, 'country': country, 'state': state, 'city': city}
+                result = g.conn.execute(text(location_query), paramaters)
+                if result.rowcount != 1:
+                    return jsonify({'message': f"There was an error adding a new location. Try again. {e}"}), 400
+                g.conn.commit()
+            except SQLAlchemyError as e:
+                flash(f"Error adding location: {e}", "error")
+                return jsonify({'message': f"There was an error adding a new location. Try again. {e}"}), 400
+            
+        # Insert user into "Users" table
         insert_query = text("""
             INSERT INTO "Users" (username, coordinate, name, age)
             VALUES (:username, :coordinate, :name, :age)
@@ -243,14 +176,17 @@ def register():
                 })
                 conn.commit()
             session['username'] = username
+            session['name'] = name
+            session['state'] = state
             flash("User registered successfully!", "success")
+            return redirect(url_for('home.home'))
         except Exception as e:
             flash(f"Error registering user: {e}", "error")
-        return redirect(url_for('home.home'))
     return render_template("register.html")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    context = {}
     if request.method == 'POST':
         username = request.form['username']
         # check if user exists
@@ -272,9 +208,10 @@ def login():
                 return redirect(url_for('home.home'))
             else:
                 flash("Invalid username.", "error")
+                context["login_error"] = "Invalid username."
         except Exception as e:
             print(f"Error logging in: {e}", "error")
-    return render_template("login.html")
+    return render_template("login.html", **context)
 
 @app.route('/add_review', methods=['GET', 'POST'])
 def add_review():
@@ -386,29 +323,54 @@ def find_sport():
         query ="""
             SELECT s.sport_id, s.sport_type, s.trail_name, s.difficulty, s.rating, s.price, s.num_people_completed
             FROM "Sports" s
-            WHERE s.sport_type = :sport_type
         """
+        if sport_type != "all":
+            query += """
+                     WHERE s.sport_type = :sport_type
+                     """
         params = {'sport_type': sport_type}
 
-        if trail_name:
+        # With fix for AND vs WHERE clause if sport_type != "all"
+        if trail_name and 'WHERE' in query:
             query += " AND trail_name = :trail_name"
             params['trail_name'] = trail_name
-        if rating is not None:
+        elif trail_name:
+            query += " WHERE trail_name = :trail_name"
+            params['trail_name'] = trail_name
+        if rating is not None and 'WHERE' in query:
             query += " AND rating >= :rating"
             params['rating'] = rating
-        if difficulty:
+        elif rating is not None:
+            query += " WHERE rating >= :rating"
+            params['rating'] = rating
+        if difficulty and 'WHERE' in query:
             query += " AND difficulty = :difficulty"
             params['difficulty'] = difficulty
-        if max_price:
+        elif difficulty:
+            query += " WHERE difficulty = :difficulty"
+            params['difficulty'] = difficulty
+        if max_price and 'WHERE' in query:
             query += " AND price <= :max_price"
             params['max_price'] = max_price
-        if city:
+        elif max_price:
+            query += " WHERE price <= :max_price"
+            params['max_price'] = max_price
+        if city and 'WHERE' in query:
             query += """ AND coordinate IN 
                             (SELECT coordinate 
                             FROM "Location" 
                             WHERE city = :city)
                      """
             params['city'] = city
+        elif city:
+            query += """ WHERE coordinate IN 
+                            (SELECT coordinate 
+                            FROM "Location" 
+                            WHERE city = :city)
+                     """
+            params['city'] = city
+        
+        print(query)
 
         try:
             with engine.connect() as conn:
@@ -615,7 +577,6 @@ def add_sport():
                              VALUES (:coordinate, :country, :state, :city)
                              """
             paramaters = {'coordinate': coordinate, 'country': country, 'state': state, 'city': city}
-            print(paramaters)
             result = g.conn.execute(text(location_query), paramaters)
             if result.rowcount != 1:
                 return jsonify({'message': f"There was an error adding a new location. Try again. {e}"}), 400
@@ -653,7 +614,6 @@ def add_sport():
                 VALUES (:sport_id, :coordinate, :sport_type, :trail_name, :difficulty, :rating, :price, :num_people_completed)
                 """
         paramaters = {'sport_id': sport_id, 'coordinate': coordinate, 'sport_type': sport_type, 'trail_name': trail_name, 'difficulty': difficulty, 'rating': rating, 'price': price, 'num_people_completed': num_people_completed}
-        print(paramaters)
 
         result = g.conn.execute(text(add_query), paramaters)
         if result.rowcount != 1:
@@ -727,7 +687,7 @@ def completed():
             result = conn.execute(query, {'username': username})
             completed_sports = [dict(row) for row in result.mappings()]
             # debug
-            print(f"Completed Sports for {username}: {completed_sports}")
+            # print(f"Completed Sports for {username}: {completed_sports}")
     except Exception as e:
         flash(f"Error fetching completed sports: {e}", "error")
         completed_sports = []
@@ -752,7 +712,7 @@ def saved():
             result = conn.execute(query, {'username': username})
             saved_sports = [dict(row) for row in result.mappings()]
             # debug
-            print(f"Saved Sports for {username}: {saved_sports}")
+            # print(f"Saved Sports for {username}: {saved_sports}")
     except Exception as e:
         flash(f"Error fetching saved sports: {e}", "error")
         saved_sports = []
@@ -845,8 +805,10 @@ def complete_sport():
         return redirect(url_for('login'))
 
     sport_id = request.form.get('sport_id')
-    if not sport_id:
-        flash("Sport ID not provided.", "error")
+    sport_type = request.form.get('sport_type')
+    trail_name = request.form.get('trail_name')
+    if not sport_id or not sport_type or not trail_name:
+        flash("Sport ID & info. not provided.", "error")
         return redirect(url_for('saved'))
 
     check_query = text("""
@@ -889,11 +851,14 @@ def complete_sport():
             else:
                 print("Update succeeded. Sport marked as completed.")
                 flash("Sport marked as completed successfully!", "success")
+                # Redirect straight to review page.
+                return render_template("add_review.html", sport_id=sport_id, sport_type=sport_type, trail_name=trail_name)
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         flash(f"Error marking sport as completed: {e}", "error")
     
-    return redirect(url_for('saved'))
+    # If failed to mark as completed
+    return redirect(url_for('saved')) 
 
 
 # @app.route('/login')

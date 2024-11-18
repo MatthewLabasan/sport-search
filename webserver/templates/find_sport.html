@@ -70,12 +70,14 @@ Find Sport - SportSearch
             <form action="/find_sport" method="POST">
                 <label for="sport_type">Sport Type:</label>
                 <select id="sport_type" name="sport_type" required>
+                    <option value="all">All</option>
                     <option value="skiing">Skiing</option>
                     <option value="hiking">Hiking</option>
                     <option value="biking">Biking</option>
                     <option value="kayaking">Kayaking</option>
                     <option value="scuba diving">Scuba Diving</option>
                 </select><br>
+                <p style="font-size: 10px; color: grey">* Selecting all may take a few seconds to load.</p>
 
                 <label for="trail_name">Trail Name (Optional):</label>
                 <input type="text" id="trail_name" name="trail_name"><br>
