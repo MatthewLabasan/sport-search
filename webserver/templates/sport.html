@@ -20,8 +20,8 @@
                 },
                 body: new URLSearchParams(new FormData(form))
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => response.json()) // Backend will send success/failure response
+            .then(data => { // Show status to user and update buttons as needed
                 showAlert(data.message);
                 if (data.message === "Sport saved successfully!") {
                     button.classList.add('saved');
@@ -45,8 +45,8 @@
                 },
                 body: new URLSearchParams({ 'review_id': reviewId })
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => response.json()) // Backend will send success/failure response
+            .then(data => { // Show status to user and update buttons as needed
                 showAlert(data.message);
                 if (data.message === "Review liked successfully!") {
                     button.classList.add('saved-liked');
