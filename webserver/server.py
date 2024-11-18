@@ -403,13 +403,12 @@ def find_sport():
             query += " AND price <= :max_price"
             params['max_price'] = max_price
         if city:
-            location_query = text("""SELECT coordinate FROM "Location" WHERE city = :city""")
-            with engine.connect() as conn:
-                location_result = conn.execute(location_query, {'city': city}).fetchone()
-                if location_result:
-                    coordinate = location_result[0]
-                    query += " AND coordinate = :coordinate"
-                    params['coordinate'] = coordinate
+            query += """ AND coordinate IN 
+                            (SELECT coordinate 
+                            FROM "Location" 
+                            WHERE city = :city)
+                     """
+            params['city'] = city
 
         try:
             with engine.connect() as conn:
@@ -453,6 +452,7 @@ def sport():
         return redirect(url_for('login'))
 
     context = {}
+    # Get sport metadata 
     try:
         sport_id = request.args.get('id')
         sport_query = """ 
@@ -491,6 +491,22 @@ def sport():
         print(f"Error finding sports: {e}", "error") 
         return redirect(url_for('find_sport'))
     
+    # Get location data
+    try:
+        location_query = """
+                        SELECT city, state 
+                        FROM "Location" L
+                        WHERE L.coordinate = :coordinate
+                        """
+        params.update({'coordinate': sport['coordinate']})
+        location = g.conn.execute(text(location_query), params)
+        location = location.fetchone()
+        context.update({'city': location[0], 'state': location[1]})
+    except SQLAlchemyError as e:
+        flash(f"Error finding locaation: {e}", "error")
+        context.update({'location_error': "Unable to find location. Try again."})
+    
+
     # Get review data
     try:
         review_query = """ 

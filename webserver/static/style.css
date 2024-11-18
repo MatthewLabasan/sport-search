@@ -95,7 +95,7 @@ button:hover {
 }
 
 .saved-liked {
-    color: red;
+    background-color: #c46969;
 }
 
 .error {
