@@ -60,11 +60,10 @@ def teardown_request(exception):
   except Exception as e:
     pass
 
+# Route to starting page
 @app.route('/')
 def index():
-  # DEBUG: this is debugging code to see what request looks like
   print(request.args)
-
   # Ensure logout
   session.clear()
   return render_template("index.html")
@@ -300,8 +299,6 @@ def add_review():
 
         return render_template("add_review.html", sport_id=sport_id, sport_type=sport_type, trail_name=trail_name)
 
-
-
 @app.route('/find_sport', methods=['GET', 'POST'])
 def find_sport():
     username = session.get('username')
@@ -467,7 +464,6 @@ def sport():
     except SQLAlchemyError as e:
         flash(f"Error finding locaation: {e}", "error")
         context.update({'location_error': "Unable to find location. Try again."})
-    
 
     # Get review data
     try:
@@ -859,12 +855,6 @@ def complete_sport():
     
     # If failed to mark as completed
     return redirect(url_for('saved')) 
-
-
-# @app.route('/login')
-# def login():
-#     abort(401)
-#     this_is_never_executed()
 
 if __name__ == "__main__":
   import click
