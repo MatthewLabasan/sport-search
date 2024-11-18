@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, request, render_template, g, redirect, Response, abort, session, flash, url_for, jsonify
 from datetime import datetime
 from geopy.geocoders import Nominatim
+from other.abbreviations import us_state_abbreviations, country_acronyms
 
 # templates
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -213,6 +214,7 @@ def register():
             flash(f"Error checking username: {e}", "error")
             return redirect(url_for('register'))
         
+        # Convert city name to coordinates using Nominatim
         geolocator = Nominatim(user_agent="4111-proj1")
         try:
             location = geolocator.geocode(city)
@@ -265,7 +267,7 @@ def login():
             if user and location:
                 session['username'] = username
                 session['name'] = user.name # For homepage use
-                # session['state'] = location.state # For homepage use
+                session['state'] = location.state # For homepage use
                 flash("Logged in successfully!", "success")
                 return redirect(url_for('home.home'))
             else:
@@ -537,10 +539,115 @@ def sport():
     
     return render_template("sport.html", **context)
         
+@app.route('/add_sport', methods=['POST'])
+def add_sport():
+    username = session.get('username')
+    if not username:
+        flash("User not logged in.", "error")
+        return redirect(url_for('login'))
+    
+    # Get new Sport ID (increment by 1)
+    try:
+        sport_id_query = """
+                        SELECT COUNT (*)
+                        FROM "Sports"
+                        """
+        sport_id = g.conn.execute(text(sport_id_query)).scalar() + 1
+    except SQLAlchemyError as e:
+        flash(f"Error getting sport_id: {e}", "error")
+        return jsonify({'message': "There was an error getting a new ID. Try again."}), 400
 
-# ADD NEW ROUTE TO ADD A NEW SPORT TO THE DATABASE IN THE "FIND SPORT" PAGE.
+    # Get location data & add if not already in "Location" table
+    try:
+        coordinate = request.form.get('coordinate')
+        coordinate_check_query = """
+                                SELECT *
+                                FROM "Location"
+                                WHERE coordinate = :coordinate
+                                """
+        result = g.conn.execute(text(coordinate_check_query), {'coordinate': coordinate}).fetchone()
+    except SQLAlchemyError as e:
+        flash(f"Error getting equipment cost: {e}", "error")
+        return jsonify({'message': "There was an error getting coordinates. Try again."}), 400
+    
+    # Add to "Location" table
+    if not result:
+        # Convert coordinates to City 
+        geolocator = Nominatim(user_agent="cs4111project")
+        try:
+            location = geolocator.reverse(coordinate, language="en")
+            if location:
+                location = location.raw['address']
+                city = location.get('city', location.get('county', location.get('region', None)))
+                state = location.get('state', location.get('country', None))
+                country = location.get('country', None)
 
+                # reformat to abbreviations if available
+                state = us_state_abbreviations.get(state, state)
+                country = country_acronyms.get(country, country)
+            if not location or not city or not state or not country:
+                flash("Coordinates not found.", "error")
+                return jsonify({'message': "Coordinates not found. Try again."}), 400
+        except Exception as e:
+            flash(f"Error getting coordinates: {e}", "error")
+            return jsonify({'message': f"There was an error adding the coordinates. Try again. {e}"}), 400
 
+        # Add to table
+        try:
+            location_query = """
+                             INSERT INTO "Location" (coordinate, country, state, city)
+                             VALUES (:coordinate, :country, :state, :city)
+                             """
+            paramaters = {'coordinate': coordinate, 'country': country, 'state': state, 'city': city}
+            print(paramaters)
+            result = g.conn.execute(text(location_query), paramaters)
+            if result.rowcount != 1:
+                return jsonify({'message': f"There was an error adding a new location. Try again. {e}"}), 400
+            g.conn.commit()
+        except SQLAlchemyError as e:
+            flash(f"Error adding location: {e}", "error")
+            return jsonify({'message': f"There was an error adding a new location. Try again. {e}"}), 400
+        
+    # Get other metadata
+    sport_type = request.form.get('sport_type')
+    trail_name = request.form.get('trail_name')
+    difficulty = request.form.get('difficulty')
+    rating = 0 
+    num_people_completed = 0
+
+    # Get price using equipment selected if any
+    price = 0
+    try:
+        equipment_query = """
+                      SELECT cost
+                      FROM "Equipment"
+                      WHERE equipment_name = :equipment
+                      """
+        selected_equipment = request.form.getlist('equipment')
+        for equipment in selected_equipment:
+            price += (g.conn.execute(text(equipment_query), {'equipment': equipment}).fetchone())[0]
+    except SQLAlchemyError as e:
+        flash(f"Error getting equipment cost: {e}", "error")
+        return jsonify({'message': "There was an error getting equipment cost. Try again."}), 400
+    
+    # Add to database
+    try:
+        add_query = """
+                INSERT INTO "Sports" (sport_id, coordinate, sport_type, trail_name, difficulty, rating, price, num_people_completed)
+                VALUES (:sport_id, :coordinate, :sport_type, :trail_name, :difficulty, :rating, :price, :num_people_completed)
+                """
+        paramaters = {'sport_id': sport_id, 'coordinate': coordinate, 'sport_type': sport_type, 'trail_name': trail_name, 'difficulty': difficulty, 'rating': rating, 'price': price, 'num_people_completed': num_people_completed}
+        print(paramaters)
+
+        result = g.conn.execute(text(add_query), paramaters)
+        if result.rowcount != 1:
+            return jsonify({'message': f"There was an error adding a new sport. Try again. {e}"}), 400
+        g.conn.commit()
+    except SQLAlchemyError as e:
+        flash(f"Error adding sport: {e}", "error")
+        return jsonify({'message': f"There was an error adding a new sport. Try again. {e}"}), 400
+    
+    return jsonify({'message': "Sport added successfully!"}), 201
 
 @app.route('/like_review', methods=['POST'])
 def like_review():
