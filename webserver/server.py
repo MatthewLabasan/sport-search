@@ -539,8 +539,6 @@ def sport():
     
     return render_template("sport.html", **context)
         
-
-# ADD NEW ROUTE TO ADD A NEW SPORT TO THE DATABASE IN THE "FIND SPORT" PAGE.
 @app.route('/add_sport', methods=['POST'])
 def add_sport():
     username = session.get('username')
@@ -651,7 +649,7 @@ def add_sport():
     
     return jsonify({'message': "Sport added successfully!"}), 201
 
-
+@app.route('/like_review', methods=['POST'])
 def like_review():
     username = session.get('username')
     if not username:
