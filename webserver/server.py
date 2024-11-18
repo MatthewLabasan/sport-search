@@ -199,7 +199,6 @@ def register():
         name = request.form['name']
         age = request.form['age']
 
-
         # Check if username already exists
         check_query = text("""
             SELECT * FROM "Users" WHERE username = :username
@@ -213,10 +212,8 @@ def register():
         except Exception as e:
             flash(f"Error checking username: {e}", "error")
             return redirect(url_for('register'))
-
         
-        # Convert city name to coordinates using Nominatim
-        geolocator = Nominatim(user_agent="your_app_name")
+        geolocator = Nominatim(user_agent="4111-proj1")
         try:
             location = geolocator.geocode(city)
             if location:
@@ -229,9 +226,6 @@ def register():
             flash(f"Error getting coordinates: {e}", "error")
             return redirect(url_for('register'))
 
-
-
-        # Insert into Users table
         insert_query = text("""
             INSERT INTO "Users" (username, coordinate, name, age)
             VALUES (:username, :coordinate, :name, :age)
@@ -245,24 +239,20 @@ def register():
                     'name': name,
                     'age': age
                 })
-                conn.commit()  # Commit the transaction
+                conn.commit()
             session['username'] = username
             flash("User registered successfully!", "success")
         except Exception as e:
             flash(f"Error registering user: {e}", "error")
-        
         return redirect(url_for('home.home'))
     return render_template("register.html")
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Get form data
         username = request.form['username']
-        # Check if user exists
+        # check if user exists
         user_query = text("""SELECT * FROM "Users" WHERE username = :username """)
-        # Get user's location
         location_query = text(""" SELECT state
                                   FROM "Users" U INNER JOIN "Location" L
                                     ON U.coordinate = L.coordinate
@@ -275,20 +265,18 @@ def login():
             if user and location:
                 session['username'] = username
                 session['name'] = user.name # For homepage use
-                session['state'] = location.state # For homepage use
+                # session['state'] = location.state # For homepage use
                 flash("Logged in successfully!", "success")
                 return redirect(url_for('home.home'))
             else:
                 flash("Invalid username.", "error")
         except Exception as e:
             print(f"Error logging in: {e}", "error")
-    
     return render_template("login.html")
 
 @app.route('/add_review', methods=['GET', 'POST'])
 def add_review():
     if request.method == 'POST':
-        # Handle the form submission to add a review
         try:
             data = request.form
             sport_type = data['sport_type']
@@ -313,15 +301,13 @@ def add_review():
                 sport_result = conn.execute(sport_query, {'sport_type': sport_type, 'trail_name': trail_name}).fetchone()
             if not sport_result:
                 flash("Sport not found.", "error")
-                print("Sport not found.")
                 return redirect(url_for('add_review'))
             
             sport_id = sport_result[0]
             time_written = datetime.now().date()
 
-            # Generate a new review_id
             with engine.connect() as conn:
-                max_review_query = text("""SELECT COALESCE(MAX(review_id), 0) + 1 FROM \"Review\"""")
+                max_review_query = text("""SELECT MAX(review_id) + 1 AS next_id FROM "Review" """)
                 review_id = conn.execute(max_review_query).scalar()
                 # debug
                 # print(f"Generated new review_id: {review_id}")
@@ -365,7 +351,6 @@ def add_review():
         return redirect(url_for('completed'))
     
     elif request.method == 'GET':
-        # Handle the GET request to show the add_review form
         sport_id = request.args.get('sport_id')
         sport_type = request.args.get('sport_type')
         trail_name = request.args.get('trail_name')
@@ -374,7 +359,6 @@ def add_review():
             flash("Sport details not provided.", "error")
             return redirect(url_for('completed'))
 
-        # Render the add_review.html page with the sport details pre-filled
         return render_template("add_review.html", sport_id=sport_id, sport_type=sport_type, trail_name=trail_name)
 
 
@@ -430,7 +414,7 @@ def find_sport():
                 result = conn.execute(text(query), params)
                 sports = [dict(row) for row in result.mappings()]
 
-                # Check which sports have been completed by the user
+                # check which sports have been completed by the user
                 for sport in sports:
                     check_completed_query = text("""
                         SELECT status FROM "Status"
@@ -438,11 +422,11 @@ def find_sport():
                     """)
                     completed_result = conn.execute(check_completed_query, {'username': username, 'sport_id': sport['sport_id']}).fetchone()
                     if completed_result:
-                        sport['completed'] = True  # Mark the sport as completed
+                        sport['completed'] = True 
                     else:
-                        sport['completed'] = False  # Mark the sport as not completed
+                        sport['completed'] = False
                 
-                # Add "save button" visibility based on whether it's saved or not
+                # check which sports have been saved by the user
                 for sport in sports:
                     check_saved_query = text("""
                         SELECT * FROM "Status"
@@ -450,7 +434,7 @@ def find_sport():
                     """)
                     saved_result = conn.execute(check_saved_query, {'username': username, 'sport_id': sport['sport_id']}).fetchone()
                     if saved_result:
-                        sport['saved'] = True  # Mark the sport as saved
+                        sport['saved'] = True
                     else:
                         sport['saved'] = False 
 
@@ -467,8 +451,6 @@ def sport():
         return redirect(url_for('login'))
 
     context = {}
-
-    # Get sport metadata
     try:
         sport_id = request.args.get('id')
         sport_query = """ 
@@ -481,7 +463,6 @@ def sport():
         sport = [dict(row) for row in sport.mappings()][0]  # Put results into a dictionary for additional conditionals in jinja
         context.update({'sport': sport})
 
-        # Mark as completed or not
         check_completed_query = """ 
                                 SELECT S.status 
                                 FROM "Status" S
@@ -489,11 +470,10 @@ def sport():
                                 """
         completed_result = conn.execute(text(check_completed_query), {'username': username, 'sport_id': sport['sport_id']}).fetchone()
         if completed_result:
-            sport['completed'] = True  # Mark the sport as completed
+            sport['completed'] = True 
         else:
-            sport['completed'] = False  # Mark the sport as not completed
+            sport['completed'] = False 
 
-        # Mark as saved or not
         check_saved_query = """
                             SELECT *
                             FROM "Status"
@@ -501,7 +481,7 @@ def sport():
                             """
         saved_result = conn.execute(text(check_saved_query), {'username': username, 'sport_id': sport['sport_id']}).fetchone()
         if saved_result:
-            sport['saved'] = True  # Mark the sport as saved
+            sport['saved'] = True
         else:
             sport['saved'] = False 
         
@@ -561,20 +541,17 @@ def sport():
 # ADD NEW ROUTE TO ADD A NEW SPORT TO THE DATABASE IN THE "FIND SPORT" PAGE.
 
 
-# NEED TO CHANGE TO like REVIEW not Sport
+
 @app.route('/like_review', methods=['POST'])
 def like_review():
     username = session.get('username')
     if not username:
-        # Ensure the user is logged in
         return jsonify({'message': 'User not logged in.'}), 401
 
     review_id = request.form.get('review_id')
     if not review_id:
-        # Make sure review_id is provided
         return jsonify({'message': 'Review ID not provided.'}), 400
 
-    # Check if the user has already liked this review
     check_query = text("""
         SELECT * FROM "Likes"
         WHERE username = :username AND review_id = :review_id
@@ -583,10 +560,8 @@ def like_review():
         with engine.connect() as conn:
             existing_like = conn.execute(check_query, {'username': username, 'review_id': review_id}).fetchone()
             if existing_like:
-                # User has already liked this review
                 return jsonify({'message': 'You have already liked this review.'}), 200
 
-            # Insert the like into the Likes table
             insert_like_query = text("""
                 INSERT INTO "Likes" (review_id, username, date_liked)
                 VALUES (:review_id, :username, :date_liked)
@@ -598,7 +573,6 @@ def like_review():
                 'date_liked': date_liked
             })
 
-            # Update the like count in the Review table
             update_query = text("""
                 UPDATE "Review"
                 SET like_count = like_count + 1
@@ -609,8 +583,7 @@ def like_review():
 
             return jsonify({'message': 'Review liked successfully!'}), 200
     except Exception as e:
-        return jsonify({'message': f'Error liking review: {str(e)}'}), 500
-
+        return jsonify({'message': f'Error liking review: {e}'}), 500
 
 
 @app.route('/completed', methods=['GET'])
@@ -630,7 +603,7 @@ def completed():
         with engine.connect() as conn:
             result = conn.execute(query, {'username': username})
             completed_sports = [dict(row) for row in result.mappings()]
-            # Debugging
+            # debug
             print(f"Completed Sports for {username}: {completed_sports}")
     except Exception as e:
         flash(f"Error fetching completed sports: {e}", "error")
@@ -655,7 +628,7 @@ def saved():
         with engine.connect() as conn:
             result = conn.execute(query, {'username': username})
             saved_sports = [dict(row) for row in result.mappings()]
-            # Debugging
+            # debug
             print(f"Saved Sports for {username}: {saved_sports}")
     except Exception as e:
         flash(f"Error fetching saved sports: {e}", "error")
@@ -676,7 +649,7 @@ def save_sport():
         flash("Sport ID not provided.", "error")
         return redirect(url_for('find_sport'))
     
-    # Check if the sport is already saved by the user
+    # check if the sport is already saved by the user
     check_query = text("""
         SELECT * FROM "Status" 
         WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
@@ -688,11 +661,8 @@ def save_sport():
                 'sport_id': sport_id
             }).fetchone()
             if existing_entry:
-                # flash("You already saved this sport.", "error")
-                # return redirect(url_for('find_sport'))
                 return jsonify({'message': "You already saved this sport."}), 200
             else:
-                # Insert the saved sport into the Status table
                 insert_query = text("""
                     INSERT INTO "Status" (username, sport_id, status)
                     VALUES (:username, :sport_id, 'saved')
@@ -703,7 +673,7 @@ def save_sport():
                 })
                 conn.commit()
                 return jsonify({'message': "Sport saved successfully!"}), 200
-                # flash("Sport saved successfully!", "success")
+
     except Exception as e:
         # flash(f"Error saving sport: {e}", "error")
         return jsonify({'message': f"Error saving sport: {str(e)}"}), 500
@@ -723,7 +693,6 @@ def unsave_sport():
         flash("Sport ID not provided.", "error")
         return redirect(url_for('saved'))
 
-    # Remove the saved sport from the Status table
     delete_query = text("""
         DELETE FROM "Status"
         WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
@@ -757,7 +726,6 @@ def complete_sport():
         flash("Sport ID not provided.", "error")
         return redirect(url_for('saved'))
 
-    # Check if the sport is saved by the user
     check_query = text("""
         SELECT * FROM "Status" 
         WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
@@ -765,7 +733,7 @@ def complete_sport():
     try:
         with engine.connect() as conn:
             existing_entry = conn.execute(check_query, {'username': username, 'sport_id': sport_id}).fetchone()
-            # Debugging: Print if the sport is already saved or not
+
             if existing_entry:
                 print("Sport is currently saved, proceeding to update the status to completed.")
             else:
@@ -776,7 +744,6 @@ def complete_sport():
                 flash("Sport is not saved or already marked as completed.", "error")
                 return redirect(url_for('saved'))
 
-            # Update the status to 'completed'
             update_query = text("""
                 UPDATE "Status"
                 SET status = 'completed'
@@ -784,7 +751,6 @@ def complete_sport():
             """)
             result = conn.execute(update_query, {'username': username, 'sport_id': sport_id})
             
-            # Increment num_people_completed in the Sports table
             increment_query = text("""
                 UPDATE "Sports"
                 SET num_people_completed = num_people_completed + 1

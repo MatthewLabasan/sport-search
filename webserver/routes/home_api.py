@@ -16,8 +16,6 @@ def home():
         flash("User not logged in.", "error")
         return redirect(url_for('login'))
     
-
-    # Get the user's coordinates from the database
     user_query = text("""SELECT coordinate FROM "Users" WHERE username = :username""")
     with engine.connect() as conn:
         user_result = conn.execute(user_query, {'username': username}).fetchone()
@@ -26,10 +24,9 @@ def home():
         flash("User's location not found.", "error")
         return redirect(url_for('home'))
     
-    # Extract user's latitude and longitude
     coordinate = user_result[0]
     latitude, longitude = map(float, coordinate.split())
-    # Set a range of ±5 degrees for filtering sports
+    
     lat_min = latitude - 5
     lat_max = latitude + 5
     lon_min = longitude - 5
