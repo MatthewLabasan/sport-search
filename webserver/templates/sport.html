@@ -51,7 +51,7 @@
                 if (data.message === "Review liked successfully!") {
                     button.classList.add('saved-liked');
                     button.disabled = true;
-                    button.textContent = 'Liked';
+                    button.textContent = '❤️ Liked';
                     // Update the like count dynamically
                     const likeCountElement = button.nextElementSibling;
                     likeCountElement.textContent = parseInt(likeCountElement.textContent) + 1;
