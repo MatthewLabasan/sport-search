@@ -9,6 +9,31 @@ Find Sport - SportSearch
         function showAlert(message) {
             alert(message);
         }
+
+        // saveSport function to alert of saved status
+        function saveSport(button) {
+            const form = button.closest('form');
+            fetch('/save_sport', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(new FormData(form))
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message);
+                if (data.message === "Sport saved successfully!") {
+                    button.classList.add('saved');
+                    button.disabled = true;
+                    button.textContent = 'Saved';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while saving the sport.');
+            });
+        }
     </script>
 {% endblock %}
 
@@ -51,16 +76,16 @@ Find Sport - SportSearch
                 <ul>
                 {% for sport in sports %}
                     <li>
-                        <strong>Sport Type:</strong> {{ sport.sport_type }}<br>
-                        <strong>Trail Name:</strong> {{ sport.trail_name }}<br>
-                        <strong>Difficulty:</strong> {{ sport.difficulty }}<br>
-                        <strong>Rating:</strong> {{ sport.rating }}<br>
-                        <strong>Price:</strong> {{ sport.price }}<br>
-                        <strong>Number of people completed:</strong> {{ sport.num_people_completed }}<br>
+                        <a href="{{ url_for('sport') }}?id={{ sport['sport_id'] }}"><strong>Trail Name:</strong> {{ sport.trail_name }}<br></a>
+                        <strong>Sport Type:</strong> {{ sport['sport_type'] }}<br>
+                        <strong>Difficulty:</strong> {{ sport['difficulty'] }}<br>
+                        <strong>Rating:</strong> {{ sport['rating'] }}<br>
+                        <strong>Price:</strong> {{ sport['price'] }}<br>
+                        <strong>Number of people completed:</strong> {{ sport['num_people_completed'] }}<br>
                         {% if sport['completed'] %}
-                            <p style="color: green;">Completed</p>
+                            <p class="completed">Completed</p>
                         {% elif sport['saved'] %}
-                            <p style="color: blue;">Saved</p>
+                            <p class="saved">Saved</p>
                         {% else %}
                             <form action="/save_sport" method="POST" style="display:inline;">
                                 <input type="hidden" name="sport_id" value="{{ sport['sport_id'] }}">
@@ -73,32 +98,5 @@ Find Sport - SportSearch
                 </ul>
             {% endif %}
         {% endif %}
-
-
-        <script>
-            function saveSport(button) {
-                const form = button.closest('form');
-                fetch('/save_sport', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams(new FormData(form))
-                })
-                .then(response => response.json())
-                .then(data => {
-                    showAlert(data.message);
-                    if (data.message === "Sport saved successfully!") {
-                        button.classList.add('saved');
-                        button.disabled = true;
-                        button.textContent = 'Saved';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('An error occurred while saving the sport.');
-                });
-            }
-        </script>
     </body>
 {% endblock %}

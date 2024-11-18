@@ -7,8 +7,6 @@ Saved Sports - SportSearch
 {% block content %}
     <body>
         <h1>Saved Sports</h1>
-        <p><a href="/">Logout</a></p>
-        <p><a href="/home">Back to Homepage</a></p>
 
         {% if not session['username'] %}
             <p>You must be logged in to view saved sports. <a href="/login">Login here</a></p>
@@ -18,7 +16,7 @@ Saved Sports - SportSearch
                 <ul>
                     {% for sport in saved_sports %}
                         <li class="saved-sport">
-                            <strong>{{ sport['sport_type'] }} - {{ sport['trail_name'] }}</strong><br>
+                            <a href="{{ url_for('sport') }}?id={{ sport['sport_id'] }}"><strong>{{ sport['trail_name'] }} ({{ sport['sport_type'] }})</strong></a><br>
                             Rating: {{ sport['rating'] }}<br>
                             Difficulty: {{ sport['difficulty'] }}<br>
                             <form action="/complete_sport" method="POST" style="display:inline;">
