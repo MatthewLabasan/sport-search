@@ -10,6 +10,19 @@ button {
     border: 0px;
     margin: 5px;
     padding: 10px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #d6d7d5;
+}
+
+.logout-button {
+    background-color: orange;
+}
+
+.logout-button:hover {
+    background-color: #e1921f;
 }
 
 .complete-button {
