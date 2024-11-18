@@ -126,58 +126,59 @@ Find Sport - SportSearch
                 {% endfor %}
                 </ul>
             {% endif %}
-                <h2>Can't find a trail? Add a new one!</h2>
-                <form>
-                    <label>Trail Name:</label>
-                    <input type="text" name="trail_name" required><br>
-    
-                    <label>Coordinates (Latitude, Longitude)</label>
-                    <input type="text" name="coordinate" required><br>
-                    
-                    <label>Sport Type:</label>
-                    <select name="sport_type" required>
-                        <option value="skiing">Skiing</option>
-                        <option value="hiking">Hiking</option>
-                        <option value="biking">Biking</option>
-                        <option value="kayaking">Kayaking</option>
-                        <option value="scuba diving">Scuba Diving</option>
-                    </select><br>
-    
-                    <label>Difficulty:</label>
-                    <select name="difficulty" required>
-                        <option value="">Select Difficulty</option>
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                    </select><br>
-                    
-                    <div class="equipment-box">
-                        <label class="equipment-box">Equipment (Optional):</label><br>
-                        <input type="checkbox" name="equipment" value="Hiking Boots">
-                        <label>Hiking Boots</label><br>
-                        <input type="checkbox" name="equipment" value="Scuba Tank">
-                        <label>Scuba Tank</label><br>
-                        <input type="checkbox" name="equipment" value="Mountain Bike">
-                        <label>Mountain Bike</label><br>
-                        <input type="checkbox" name="equipment" value="Kayak">
-                        <label>Kayak</label><br>
-                        <input type="checkbox" name="equipment" value="Ski Poles">
-                        <label>Ski Poles</label><br>
-                        <input type="checkbox" name="equipment" value="Wetsuit">
-                        <label>Wetsuit</label><br>
-                        <input type="checkbox" name="equipment" value="Climbing Harness">
-                        <label>Climbing Harness</label><br>
-                        <input type="checkbox" name="equipment" value="Sleeping Bag">
-                        <label>Sleeping Bag</label><br>
-                        <input type="checkbox" name="equipment" value="Ski Goggles">
-                        <label>Ski Goggles</label><br>
-                        <input type="checkbox" name="equipment" value="Tent">
-                        <label>Tent</label><br>
-                    </div>
-                    <!--do not submit form, handle outside-->
-                    <button type="button" onClick="addSport(this)">Add Sport</button>
-                </form>
-
+                <div class="add-sport">
+                    <h2>Can't find a trail? Add a new one!</h2>
+                    <form>
+                        <label>Trail Name:</label>
+                        <input type="text" name="trail_name" required><br>
+        
+                        <label>Coordinates (Latitude, Longitude): </label>
+                        <input type="text" name="coordinate" required><br>
+                        
+                        <label>Sport Type:</label>
+                        <select name="sport_type" required>
+                            <option value="skiing">Skiing</option>
+                            <option value="hiking">Hiking</option>
+                            <option value="biking">Biking</option>
+                            <option value="kayaking">Kayaking</option>
+                            <option value="scuba diving">Scuba Diving</option>
+                        </select><br>
+        
+                        <label>Difficulty:</label>
+                        <select name="difficulty" required>
+                            <option value="">Select Difficulty</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select><br>
+                        
+                        <div class="equipment-box">
+                            <label class="equipment-box">Equipment (Optional):</label><br>
+                            <input type="checkbox" name="equipment" value="Hiking Boots">
+                            <label>Hiking Boots</label><br>
+                            <input type="checkbox" name="equipment" value="Scuba Tank">
+                            <label>Scuba Tank</label><br>
+                            <input type="checkbox" name="equipment" value="Mountain Bike">
+                            <label>Mountain Bike</label><br>
+                            <input type="checkbox" name="equipment" value="Kayak">
+                            <label>Kayak</label><br>
+                            <input type="checkbox" name="equipment" value="Ski Poles">
+                            <label>Ski Poles</label><br>
+                            <input type="checkbox" name="equipment" value="Wetsuit">
+                            <label>Wetsuit</label><br>
+                            <input type="checkbox" name="equipment" value="Climbing Harness">
+                            <label>Climbing Harness</label><br>
+                            <input type="checkbox" name="equipment" value="Sleeping Bag">
+                            <label>Sleeping Bag</label><br>
+                            <input type="checkbox" name="equipment" value="Ski Goggles">
+                            <label>Ski Goggles</label><br>
+                            <input type="checkbox" name="equipment" value="Tent">
+                            <label>Tent</label><br>
+                        </div>
+                        <!--do not submit form, handle outside-->
+                        <button type="button-green" onClick="addSport(this)">Add Sport</button>
+                    </form>
+                </div>
         {% endif %}
     </body>
 {% endblock %}

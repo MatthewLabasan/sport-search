@@ -14,7 +14,7 @@ def home():
         flash("User not logged in.", "error")
         return redirect(url_for('login'))
 
-    # get sports in their city
+    # get sports in their state
     sports_query = """
                    SELECT *
                    FROM "Sports" S INNER JOIN "Location" L

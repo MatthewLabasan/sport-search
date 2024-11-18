@@ -267,7 +267,7 @@ def login():
             if user and location:
                 session['username'] = username
                 session['name'] = user.name # For homepage use
-                # session['state'] = location.state # For homepage use
+                session['state'] = location.state # For homepage use
                 flash("Logged in successfully!", "success")
                 return redirect(url_for('home.home'))
             else:
