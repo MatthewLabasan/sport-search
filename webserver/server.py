@@ -562,34 +562,55 @@ def sport():
 
 
 # NEED TO CHANGE TO like REVIEW not Sport
-@app.route('/like_sport', methods=['POST'])
-def like_sport():
+@app.route('/like_review', methods=['POST'])
+def like_review():
     username = session.get('username')
     if not username:
-        flash("User not logged in.", "error")
-        return redirect(url_for('login'))
-    
+        # Ensure the user is logged in
+        return jsonify({'message': 'User not logged in.'}), 401
+
     review_id = request.form.get('review_id')
     if not review_id:
-        flash("Review ID not provided.", "error")
-        return redirect(url_for('find_sport'))
-    
-    like_query = text("""
-        INSERT INTO "Likes" (review_id, username, date_liked)
-        VALUES (:review_id, :username, :date_liked)
+        # Make sure review_id is provided
+        return jsonify({'message': 'Review ID not provided.'}), 400
+
+    # Check if the user has already liked this review
+    check_query = text("""
+        SELECT * FROM "Likes"
+        WHERE username = :username AND review_id = :review_id
     """)
     try:
         with engine.connect() as conn:
-            conn.execute(like_query, {
+            existing_like = conn.execute(check_query, {'username': username, 'review_id': review_id}).fetchone()
+            if existing_like:
+                # User has already liked this review
+                return jsonify({'message': 'You have already liked this review.'}), 200
+
+            # Insert the like into the Likes table
+            insert_like_query = text("""
+                INSERT INTO "Likes" (review_id, username, date_liked)
+                VALUES (:review_id, :username, :date_liked)
+            """)
+            date_liked = datetime.now().date()
+            conn.execute(insert_like_query, {
                 'review_id': review_id,
                 'username': username,
-                'date_liked': datetime.now().date()
+                'date_liked': date_liked
             })
+
+            # Update the like count in the Review table
+            update_query = text("""
+                UPDATE "Review"
+                SET like_count = like_count + 1
+                WHERE review_id = :review_id
+            """)
+            conn.execute(update_query, {'review_id': review_id})
             conn.commit()
-        flash("Sport liked successfully!", "success")
+
+            return jsonify({'message': 'Review liked successfully!'}), 200
     except Exception as e:
-        flash(f"Error liking sport: {e}", "error")
-    return redirect(url_for('find_sport'))
+        return jsonify({'message': f'Error liking review: {str(e)}'}), 500
+
 
 
 @app.route('/completed', methods=['GET'])

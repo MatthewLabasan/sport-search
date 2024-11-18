@@ -37,11 +37,13 @@
 
         // Function to update like count
         function handleLike(button) {
+            const reviewId = button.getAttribute('data-review-id');
             fetch('/like_review', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                }
+                },
+                body: new URLSearchParams({ 'review_id': reviewId })
             })
             .then(response => response.json())
             .then(data => {
@@ -49,6 +51,9 @@
                 if (data.message === "Review liked successfully!") {
                     button.classList.add('saved-liked');
                     button.disabled = true;
+                    // Update the like count dynamically
+                    const likeCountElement = button.nextElementSibling;
+                    likeCountElement.textContent = parseInt(likeCountElement.textContent) + 1;
                 }
             })
             .catch(error => {
@@ -56,6 +61,7 @@
                 showAlert('An error occurred while liking the review.');
             });
         }
+        
     </script>
 {% endblock head %}
 
@@ -114,7 +120,10 @@
                         </p>
                         <p>
                             <!-- like does not update dynamically. reload to see.-->
-                            <button class="like-button" onclick="handleLike(this)">❤️ Like</button> (<span class="like-count">{{ review.like_count }}</span>)
+                            <form style="display:inline;">
+                                <input type="hidden" name="review_id" value="{{ review.review_id }}">
+                                <button class="like-button" type="button" onclick="handleLike(this)" data-review-id="{{ review.review_id }}">❤️ Like</button> (<span class="like-count">{{ review.like_count }}</span>)
+                            </form>
                         </p>
                     </div>
                 {% endfor %}
