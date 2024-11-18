@@ -8,7 +8,7 @@ Write a Review
     <body>
         <button onclick="location.href='/completed'">Back to Completed Trails</button>
         <br>
-        <h2>Write a Review for "{{ sport_type }} - {{ trail_name }}"</h2>
+        <h2>Write a Review for "{{ trail_name }} ({{ sport_type }})"</h2>
 
         <form action="/add_review" method="POST">
             <input type="hidden" name="sport_id" value="{{ sport_id }}">
