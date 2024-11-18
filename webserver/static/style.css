@@ -1,8 +1,52 @@
 body {
     font-size: 15pt;
-    font-family: Arial, sans-serif;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
     margin: 0 20px
 }
+
+a {
+    text-decoration: none; 
+    border: 0px; 
+    padding: 10px; 
+}
+
+a h1 {
+    font-size: 36px;
+    color: #69936b;
+    margin: 5; 
+    transition: color 0.2s ease;
+}
+
+a:hover h1 {
+    color: #69936b;
+}
+
+a h1 u {
+    text-decoration: none;
+    margin: 5px;
+    transition: border-bottom-color 0.3s ease;
+}
+
+a:hover h1 u {
+    border-bottom-color: #69936b;
+}
+
+input[type="submit"] {
+    padding: 10px 10px;
+    font-size: 15px;
+    margin: 5px;
+    background-color: #69936b; 
+    color: white; 
+    border: 0px; 
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+input[type="submit"]:hover {
+    background-color: #9db99e; 
+}
+
 
 button {
     font-size: 15px;

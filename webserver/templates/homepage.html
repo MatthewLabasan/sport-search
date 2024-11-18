@@ -16,7 +16,8 @@ Home - Sport Search
 
     <div>
       {% for sport in sports %}
-      <a href="{{ url_for('sport') }}?id={{ sport['sport_id'] }}">{{ sport.trail_name }}<br></a>
+        <a href="{{ url_for('sport') }}?id={{ sport['sport_id'] }}">
+          {{ sport.trail_name }}<br></a>
       {% endfor %}
     </div>
   </body>

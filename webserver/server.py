@@ -342,6 +342,20 @@ def add_review():
                     'like_count': 0
                 })
                 conn.commit()
+
+            # Update the average rating for the sport
+            update_rating_query = text("""
+                UPDATE "Sports"
+                SET rating = (
+                    SELECT AVG(rating)
+                    FROM "Review"
+                    WHERE sport_id = :sport_id
+                )
+                WHERE sport_id = :sport_id
+            """)
+            with engine.connect() as conn:
+                conn.execute(update_rating_query, {'sport_id': sport_id})
+                conn.commit()
                 print("Review added successfully.")
                 flash("Review added successfully!", "success")
         except Exception as e:
@@ -378,8 +392,10 @@ def find_sport():
     if request.method == 'POST':
         sport_type = request.form.get('sport_type')
         trail_name = request.form.get('trail_name')
+        city = request.form.get('city')
         rating = request.form.get('rating', type=float)
         difficulty = request.form.get('difficulty')
+        max_price = request.form.get('max_price', type=float)  
 
         query ="""
             SELECT s.sport_id, s.sport_type, s.trail_name, s.difficulty, s.rating, s.price, s.num_people_completed
@@ -397,6 +413,17 @@ def find_sport():
         if difficulty:
             query += " AND difficulty = :difficulty"
             params['difficulty'] = difficulty
+        if max_price:
+            query += " AND price <= :max_price"
+            params['max_price'] = max_price
+        if city:
+            location_query = text("""SELECT coordinate FROM "Location" WHERE city = :city""")
+            with engine.connect() as conn:
+                location_result = conn.execute(location_query, {'city': city}).fetchone()
+                if location_result:
+                    coordinate = location_result[0]
+                    query += " AND coordinate = :coordinate"
+                    params['coordinate'] = coordinate
 
         try:
             with engine.connect() as conn:
@@ -542,20 +569,20 @@ def like_sport():
         flash("User not logged in.", "error")
         return redirect(url_for('login'))
     
-    sport_id = request.form.get('sport_id')
-    if not sport_id:
-        flash("Sport ID not provided.", "error")
+    review_id = request.form.get('review_id')
+    if not review_id:
+        flash("Review ID not provided.", "error")
         return redirect(url_for('find_sport'))
     
     like_query = text("""
-        INSERT INTO "Likes" (username, sport_id, date_liked)
-        VALUES (:username, :sport_id, :date_liked)
+        INSERT INTO "Likes" (review_id, username, date_liked)
+        VALUES (:review_id, :username, :date_liked)
     """)
     try:
         with engine.connect() as conn:
             conn.execute(like_query, {
+                'review_id': review_id,
                 'username': username,
-                'sport_id': sport_id,
                 'date_liked': datetime.now().date()
             })
             conn.commit()
@@ -735,6 +762,15 @@ def complete_sport():
                 WHERE username = :username AND sport_id = :sport_id AND status = 'saved'
             """)
             result = conn.execute(update_query, {'username': username, 'sport_id': sport_id})
+            
+            # Increment num_people_completed in the Sports table
+            increment_query = text("""
+                UPDATE "Sports"
+                SET num_people_completed = num_people_completed + 1
+                WHERE sport_id = :sport_id
+            """)
+            conn.execute(increment_query, {'sport_id': sport_id})
+            
             conn.commit()
             
             if result.rowcount == 0:
