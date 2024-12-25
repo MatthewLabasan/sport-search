@@ -3,7 +3,7 @@
 # Demo
 The GIF for the demo is below and may take a couple seconds to load.
 
-![Sport Search Demo](./public/Sports-Search-Demo.gif)
+![Sport Search Demo](./webserver/public/Sports-Search-Demo.gif)
 
 # Table of Contents
 1. [Introduction](#introduction)
@@ -28,7 +28,7 @@ This project was built for my Introductions to Database course with my partner, 
 
 # Database Architecture
 ### Entity Relationship Diagram
-<img alt="Entity Relationship Diagram" src="matthew-repo/sport-search/webserver/public/ER-Diagram.png" width="1000" height="400">
+<img alt="Entity Relationship Diagram" src="./webserver/public/ER-Diagram.png" width="1000" height="400">
 
 ### SQL Mappings
 Create these tables in the same order as listed.
