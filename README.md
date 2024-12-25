@@ -126,7 +126,7 @@ The user can search for the outdoor activities they want by the sports category,
 ## Installation: 
 1. Clone this repository to your system. In the console, type in `git clone https://github.com/MatthewLabasan/sport-search.git`
 2. From the terminal, `cd` to the `webserver` folder and run `pip install -r requirements.txt`
-3. Open the `server.py` folder and add your database URI to line 31. Ensure the database schema matches the schema included above.
+3. Open `server.py` and add your database URI to line 31. Ensure the database schema matches the schema included above.
 4. Run `python server,py` in the `webserver` folder to start the program!  
 
 # Reflection
@@ -141,3 +141,4 @@ Through this project, I gained skills and knowledge in best practices for develo
 
 # Notes
 __Routes__: Due to the time constraints of this project, API routes are placed directly into the `server.py` file. An attempt was made to compartmentalize routes for the home page, however the rest are left in the `server.py` file.
+__Locations__: When adding a new sport, coordinates will need to be in the form `latitude, longitude`. A Python library will handle converting these coordinates into real metadata.
