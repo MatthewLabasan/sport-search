@@ -1,4 +1,4 @@
-# Sport Search: Find the best sport for you to do!
+# Sport Search: Find the best sport to do!
 
 # Demo
 The GIF for the demo is below and may take a couple seconds to load.
