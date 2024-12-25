@@ -28,7 +28,7 @@ from routes.home_api import home_api
 # blueprints
 app.register_blueprint(home_api, url_prefix='/home')
 
-DATABASEURI = "postgresql://bl3092:938417@104.196.222.236/proj1part2"
+DATABASEURI = "hidden"
 engine = create_engine(DATABASEURI)
 conn = engine.connect()
 
