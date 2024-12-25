@@ -28,10 +28,91 @@ This project was built for my Introductions to Database course with my partner, 
 
 # Database Architecture
 ### Entity Relationship Diagram
-<img alt="Entity Relationship Diagram" src="server/public/architecture-diagram.png" width="1000" height="525">
+<img alt="Entity Relationship Diagram" src="matthew-repo/sport-search/webserver/public/ER-Diagram.png" width="1000" height="400">
 
 ### SQL Mappings
-<img alt="SQL Mappings" src="server/public/architecture-diagram.png" width="1000" height="525">
+Create these tables in the same order as listed.
+```SQL
+CREATE TABLE “Location”(
+  coordinate VARCHAR(100),
+  country VARCHAR(40),
+  state VARCHAR(40),
+  city VARCHAR(40),
+  PRIMARY KEY (coordinate));
+
+CREATE TABLE “Users”(
+  username VARCHAR(20),
+  coordinate VARCHAR(100) NOT NULL,
+  name VARCHAR NOT NULL,
+  age INTEGER,
+  CHECK (age >= 0),
+  PRIMARY KEY (username),
+  FOREIGN KEY (coordinate) REFERENCES “Location”);
+
+CREATE TABLE “Sports”(
+  sport_id INTEGER,
+  coordinate VARCHAR(100) NOT NULL,
+  sport_type VARCHAR(20) CHECK (sport_type IN (‘skiing’,   ‘hiking’, ‘biking’, ‘kayaking’, ‘scuba diving’)) NOT NULL,
+  trail_name VARCHAR(100) NOT NULL,
+  difficulty VARCHAR(20) CHECK (difficulty IN (‘beginner’, ‘intermediate’, ‘advanced’)) NOT NULL,
+  rating REAL,
+  CHECK (rating >= 0 AND rating <= 5),
+  price REAL,
+  CHECK (price >= 0),
+  num_people_completed INTEGER,
+  CHECK (num_people_completed  >= 0),
+  PRIMARY KEY (spots_id),
+  FOREIGN KEY (coordinate) REFERENCES “Location”);
+
+CREATE TABLE “Equipment”(
+  equipment_name VARCHAR,
+  cost: REAL,
+  CHECK (cost >= 0),
+  PRIMARY KEY (equipment_name));
+
+CREATE TABLE “Needs”(
+  equipment_name VARCHAR,
+  sport_id INTEGER,
+  PRIMARY KEY (equipment_name, sport_id),
+  FOREIGN KEY (equipment_name) REFERENCES Equipment,
+  FOREIGN KEY (sport_id) REFERENCES “Sports”
+ ON DELETE CASCADE)
+
+CREATE TABLE “Status”(
+  username VARCHAR(20),
+  sport_id INTEGER,
+  status VARCHAR CHECK (status IN (‘completed’, ‘saved’)),
+  PRIMARY KEY (username, sport_id),
+  FOREIGN KEY (username) REFERENCES “Users”,
+ ON DELETE CASCADE,
+  FOREIGN KEY (sport_id) REFERENCES “Sports”
+ ON DELETE CASCADE);
+
+CREATE TABLE “Review”(
+  review_id INTEGER,
+  username VARCHAR(20) NOT NULL,
+  sport_id INTEGER NOT NULL,
+  time_written DATE NOT NULL,
+  date_completed DATE,
+  CHECK(time_written >= date_completed),
+  rating INTEGER, 
+  CHECK (rating >= 0 AND rating <= 5),
+  comments VARCHAR,
+  like_count INTEGER,
+  CHECK (like_count >= 0)
+  PRIMARY KEY (review_id),
+  FOREIGN KEY (username, sport_id) REFERENCES “Status” ON DELETE CASCADE);
+
+CREATE TABLE “Likes”(
+  review_id INTEGER,
+  username VARCHAR(20),
+  date_liked DATE,
+  PRIMARY KEY (review_id, username),
+  FOREIGN KEY (review_id) REFERENCES “Review”,
+ ON DELETE CASCADE,
+  FOREIGN KEY (username) REFERENCES “Users”
+ ON DELETE CASCADE);
+```
 
 ### Explanation of Entities and Relations
 We have entity sets: Users, Review, Sports, Location, and Equipment. Each User has a unique username, along with attributes like age, name, and coordinate. Review has a unique review_id, with attributes such as username, date, rating, comments, and like_count (how many likes they receive). Sports has a unique sport_id, with attributes including coordinate, sports_type (Hiking, Skiing, Biking, Scuba Diving, or Kayaking), difficulty, rating, price, and num_people_completed. Location has a unique coordinate with country, state, and city attributes, and Equipment has a unique name and cost.
