@@ -17,7 +17,7 @@ The GIF for the demo is below and may take a couple seconds to load.
 5. [Notes](#notes)
 
 # Introduction
-This project was built for my Introductions to Database course with my partner, Sally Liu. Our focus for this project was to design a database for an application of our interest, which in this case, was a sports finder. Sports supported include: skiing, scuba diving, kayaking, biking, and cycling. Emphasis was placed on developing a well thought out ER diagram, and mapping the correct constraints into a PostgreSQL database without using object-relational features. The Python Flask framework was then utilized to create an intuitive way to interact with our database.
+This project was built for my Introduction to Databases course with my partner, Sally Liu. Our focus for this project was to design a database for an application of our interest, which in this case, was a sports finder. Sports supported include: skiing, scuba diving, kayaking, biking, and cycling. Emphasis was placed on developing a well thought out ER diagram, and mapping the correct constraints into a PostgreSQL database without using object-relational features. The Python Flask framework was then utilized to create an intuitive way to interact with our database.
 
 ### Features
 1. Registration and login
